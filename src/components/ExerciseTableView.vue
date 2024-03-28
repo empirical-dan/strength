@@ -109,7 +109,7 @@ function addRow(copy?: boolean) {
     copy = false;
   }
   // add a new set.
-  // then select the set that was just added
+  // then select the set that was just added.
   selectedRowId.value = addSet(rows, selectedRowId, copy);
 }
 
