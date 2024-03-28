@@ -108,7 +108,7 @@ function addRow(copy?: boolean) {
   if (copy === undefined) {
     copy = false;
   }
-  // add a new set
+  // add a new set.
   // then select the set that was just added
   selectedRowId.value = addSet(rows, selectedRowId, copy);
 }
