@@ -1,16 +1,58 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
+import { supabase } from 'app/supabase/supabase';
+import { useRouter } from 'vue-router';
 
 const $q = useQuasar();
+const router = useRouter();
 
 const leftDrawerOpen = ref(false);
 const isDarkMode = ref($q.dark.isActive);
 const tab = ref('Squat');
+// const isLoggedIn = ref(false);
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
+
+async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.log('Failed to sign out');
+  } else {
+    // isLoggedIn.value = false;
+    console.log('Signed out');
+    router.push('/login');
+  }
+}
+
+// async function signIn() {
+//   if (await isAlreadyLoggedIn()) {
+//     isLoggedIn.value = true;
+//   }
+// }
+
+// onBeforeMount(async () => {
+//   if (await isAlreadyLoggedIn()) {
+//     console.log('Logged in already');
+//     isLoggedIn.value = true;
+//   } else {
+//     console.log('Not signed in');
+//     isLoggedIn.value = false;
+//   }
+// });
+
+// onBeforeUpdate(async () => {
+//   if (await isAlreadyLoggedIn()) {
+//     console.log('Logged in already');
+//     isLoggedIn.value = true;
+//   } else {
+//     console.log('Not signed in');
+//     isLoggedIn.value = false;
+//   }
+// });
+
 watch(isDarkMode, () => {
   $q.dark.toggle();
   console.log($q.dark.isActive);
@@ -60,7 +102,7 @@ watch(isDarkMode, () => {
           :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
         />
       </q-toolbar>
-      <q-card :class="!isDarkMode ? 'shadow-up-2 shadow-4' : 'no-shadow '"
+      <q-card class="shadow-up-2 shadow-4"
         ><q-tabs
           v-model="tab"
           class="text-primary"
@@ -160,11 +202,19 @@ watch(isDarkMode, () => {
             >Planner</q-item-section
           >
         </q-item>
-        <q-item clickable v-ripple>
+
+        <q-item clickable v-ripple @click="signOut">
           <q-item-section avatar>
-            <q-icon name="help" size="md" color="primary" class="q-py-sm" />
+            <q-icon
+              name="sym_o_logout"
+              size="md"
+              color="primary"
+              class="q-py-sm"
+            />
           </q-item-section>
-          <q-item-section class="text-h6 text-weight-bold">Help</q-item-section>
+          <q-item-section class="text-h6 text-weight-bold"
+            >Sign Out</q-item-section
+          >
         </q-item>
       </q-list>
     </q-drawer>
@@ -174,7 +224,7 @@ watch(isDarkMode, () => {
   </q-layout>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 :deep(.q-toolbar.no-hover .q-focus-helper) {
   display: none;
 }
