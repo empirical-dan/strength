@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { supabase } from 'app/supabase/supabase';
 import { reactive, ref } from 'vue';
 import { testPattern } from 'src/patterns';
-import { isAlreadyLoggedIn } from '../../supabase/user';
+import { useAuthStore } from 'src/stores/auth';
+// import { useRouter } from 'vue-router';
+// const router = useRouter();
 
-const isLoggedIn = ref(false);
+const auth = useAuthStore();
+const success = ref(false);
 
 // Create a reactive "form" object to store the values of the form fields
 const form = reactive({
@@ -13,35 +15,14 @@ const form = reactive({
   confirmPassword: '',
 });
 
-async function signInWithEmail() {
-  if (await isAlreadyLoggedIn()) {
-    console.log('Signed in already.');
-    return true;
-  }
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: form.email,
-    password: form.password,
-  });
-  if (!error) {
-    console.log(data);
-    return true;
-  } else {
-    console.error(error);
-    return false;
-  }
-}
-
 // Function to handle form submission
 async function handleSubmit() {
   // Try to sign in
-  const success = await signInWithEmail();
-  if (!success) {
-    // If unsuccessful
-    console.log('Failed to sign in');
-    return;
-  }
-  // If the form is valid, perform some action with the form data
-  isLoggedIn.value = true;
+  success.value = await auth.signInWithPassword(form.email, form.password);
+
+  // Logged in. If user newly logged in the state of auth.isLogged in will change.
+  // This will cause the popup to appear
+  // If already signed in then they should have been forwarded straight to the app '/' by the router
 }
 </script>
 
@@ -109,7 +90,7 @@ async function handleSubmit() {
   </q-page>
 
   <q-dialog
-    v-model="isLoggedIn"
+    v-model="success"
     persistent
     transition-show="scale"
     transition-hide="scale"

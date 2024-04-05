@@ -1,141 +1,48 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { supabase } from 'app/supabase/supabase';
 import {
   useValidateEmail,
   useValidatePassword,
 } from '../composables/validators';
-// import { useVuelidate } from '@vuelidate/core';
-// import {
-//   minLength,
-//   required,
-//   email,
-//   sameAs,
-//   helpers,
-// } from '@vuelidate/validators';
-// import { testPattern } from 'src/patterns';
+import { useAuthStore } from 'src/stores/auth';
 
+const auth = useAuthStore();
 const isRegistered = ref(false);
 const displayLoggedInDialog = ref(false);
 const displayInvalidDialog = ref(false);
 
-// const passwordValidators = {
-//   minLength: minLength(10),
-//   containsUppercase: helpers.withMessage(
-//     () => 'Password must contain Uppercase (A-Z)',
-//     function (value: string): boolean {
-//       // console.log(value); //value is undefined
-//       return /[A-Z]/.test(value);
-//     }
-//   ),
-//   containsLowercase: helpers.withMessage(
-//     () => 'Password must contain lowercase (a-z)',
-//     function (value: string): boolean {
-//       // console.log(value); //value is undefined
-//       return /[a-z]/.test(value);
-//     }
-//   ),
-//   containsNumber: helpers.withMessage(
-//     () => 'Password must contain number (0-9)',
-//     function (value: string): boolean {
-//       // console.log(value); //value is undefined
-//       return /[0-9]/.test(value);
-//     }
-//   ),
-//   containsSymbol: helpers.withMessage(
-//     () => 'Password must contain symbol',
-//     function (value: string): boolean {
-//       // console.log(value); //value is undefined
-//       return /[-#!$@£%^&*()_+|~=`{}\[\]:";'<>?,.\/ ]$/.test(value);
-//     }
-//   ),
-// };
-
-// Create a reactive "form" object to store the values of the form fields
-// const form = reactive({
-//   email: '',
-//   password: '',
-//   confirmPassword: '',
-// });
-
-type AccountFormState = {
+type accountForm = {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
 };
 
-const formState = reactive(<AccountFormState>{
+const form = reactive(<accountForm>{
   name: '',
   email: '',
   password: '',
   confirmPassword: '',
 });
 
-// // Define validation rules for each form field using "computed"
-// const rules = computed(() => {
-//   return {
-//     email: {
-//       required, // Email is required
-//       email, // Must be a valid email address
-//     },
-//     password: {
-//       required,
-//       ...passwordValidators, //here is the difference
-//     },
-//     confirmPassword: {
-//       required, // Password confirmation is required
-//       sameAs: sameAs(form.password), // Must match the value of the entered password
-//     },
-//   };
-// });
-// // Use the "useVuelidate" function to perform form validation
-// const v$ = useVuelidate(rules, form);
-
-// const errorMessagePassword = computed(() => {
-//   if (!v$.value.password.$error) {
-//     return '';
-//   } else return v$.value.password.$errors[0].$message.toString();
-// });
-
 async function createAccount() {
   // see if user already exists
-  if (await signInWithEmail()) {
+  if (await auth.signInWithPassword(form.email, form.password)) {
     displayLoggedInDialog.value = true;
     return;
   }
-  const { data, error } = await supabase.auth.signUp({
-    email: formState.email,
-    password: formState.password,
-    options: {
-      emailRedirectTo: 'http://localhost:9200/#/app',
-    },
-  });
-  if (error) {
-    console.log(data);
-    console.error(error);
-  } else {
+  if (await auth.signUp(form.email, form.password)) {
     isRegistered.value = true;
-    console.log(data);
+  } else {
+    console.log('Failed to sign up');
   }
-}
-
-async function signInWithEmail() {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: formState.email,
-    password: formState.password,
-  });
-  if (!error) {
-    console.log(data);
-    return true;
-  } else return false;
 }
 
 const isFormValid = computed(() => {
   if (
-    useValidateEmail(formState.email).valid &&
-    useValidatePassword(formState.password).valid &&
-    formState.password === formState.confirmPassword
+    useValidateEmail(form.email).valid &&
+    useValidatePassword(form.password).valid &&
+    form.password === form.confirmPassword
   ) {
     return true;
   } else return false;
@@ -155,8 +62,6 @@ function handleSubmit() {
 </script>
 
 <template>
-  <!-- style="background: linear-gradient(#8274c5, #5a4a9f)" -->
-
   <q-page class="window-width row justify-center items-center bg-secondary">
     <q-form @submit.prevent="handleSubmit">
       <div class="column q-px-lg">
@@ -170,7 +75,7 @@ function handleSubmit() {
                 <q-input
                   square
                   clearable
-                  v-model="formState.email"
+                  v-model="form.email"
                   type="email"
                   label="Email"
                   :rules="[
@@ -187,7 +92,7 @@ function handleSubmit() {
                 <q-input
                   square
                   clearable
-                  v-model="formState.password"
+                  v-model="form.password"
                   type="password"
                   label="Password"
                   :rules="[
@@ -205,13 +110,12 @@ function handleSubmit() {
                 <q-input
                   square
                   clearable
-                  v-model="formState.confirmPassword"
+                  v-model="form.confirmPassword"
                   type="password"
                   label="Confirm Password"
                   :rules="[
                     (val) =>
-                      (val && val === formState.password) ||
-                      'Passwords must match',
+                      (val && val === form.password) || 'Passwords must match',
                   ]"
                 >
                   <template v-slot:prepend>
@@ -264,7 +168,7 @@ function handleSubmit() {
           <div style="font-size: 1.2em; font-weight: bold" class="q-pb-md">
             Please check your email to verify.
           </div>
-          Link sent to: <em>{{ formState.email }}</em
+          Link sent to: <em>{{ form.email }}</em
           ><br />
           <div class="q-pt-md text-bold">Welcome to Strength Stuδi/o!</div>
         </q-card-section>
@@ -298,7 +202,7 @@ function handleSubmit() {
           <div style="font-size: 1.2em; font-weight: bold" class="q-pb-md">
             You are already registered.
           </div>
-          Email: <em>{{ formState.email }}</em
+          Email: <em>{{ form.email }}</em
           ><br />
           <div class="q-pt-md text-bold">Welcome back to Strength Stuδi/o!</div>
         </q-card-section>

@@ -5,9 +5,9 @@ import {
   createWebHashHistory,
   createWebHistory,
 } from 'vue-router';
-import { supabase } from 'app/supabase/supabase';
 
 import routes from './routes';
+import { useAuthStore } from 'src/stores/auth';
 
 /*
  * If not building with SSR mode, you can
@@ -25,7 +25,7 @@ export default route(function (/* { store, ssrContext } */) {
     ? createWebHistory
     : createWebHashHistory;
 
-  const Router = createRouter({
+  const router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
@@ -35,15 +35,48 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeEach(async (to, from, next) => {
-    // get current user info
-    const currentUser = (await supabase.auth.getSession()).data.session?.user;
-    console.log(currentUser);
-    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  router.beforeEach(async (to) => {
+    const auth = useAuthStore();
 
-    if (requiresAuth && !currentUser) next('/login');
-    // else if (!requiresAuth && currentUser) next('/');
-    else next();
+    if (
+      // make sure the user is authenticated
+      // ❗️ Avoid an infinite redirect
+      to.name !== 'login' &&
+      to.name !== 'register' &&
+      !(await auth.getSession())
+    ) {
+      // redirect the user to the login page
+      console.log('auth.getSession() === false');
+      console.log('redirecting to Login page');
+      return { name: 'login' };
+    }
+    if (to.name === 'login' && (await auth.getSession())) {
+      console.log('Already logged in.');
+      console.log('redirecting to homepage');
+      return { name: '/' };
+    }
+    if (to.name === 'register' && (await auth.getSession())) {
+      console.log('Already logged in.');
+      console.log('redirecting to homepage');
+      return { name: '/' };
+    }
   });
-  return Router;
+
+  //   // else if (!requiresAuth && currentUser) next('/');
+  //   else {
+  //     next();
+  //   }
+  // });
+
+  // Router.beforeEach(async (to, from, next) => {
+  //   // get current user info
+  //   const currentUser = (await supabase.auth.getSession()).data.session?.user;
+  //   console.log(currentUser);
+  //   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+  //   if (requiresAuth && !currentUser) next('/login');
+  //   // else if (!requiresAuth && currentUser) next('/');
+  //   else next();
+  // });
+  return router;
 });

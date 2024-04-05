@@ -1,4 +1,4 @@
-import { supabase } from 'app/supabase/supabase';
+import { supabase } from 'src/supabase/supabase';
 
 export async function isAlreadyLoggedIn() {
   const { data, error } = await supabase.auth.getSession();
