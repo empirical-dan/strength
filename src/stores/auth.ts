@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
       email: email,
       password: password,
       options: {
-        emailRedirectTo: 'http://localhost:9200/#/app',
+        emailRedirectTo: 'https://strength-seven.vercel.app/',
       },
     });
     if (error) {

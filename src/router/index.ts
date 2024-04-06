@@ -45,10 +45,10 @@ export default route(function (/* { store, ssrContext } */) {
       to.name !== 'register' &&
       !(await auth.getSession())
     ) {
-      // redirect the user to the login page
+      // redirect the user to the Registration page
       console.log('auth.getSession() === false');
-      console.log('redirecting to Login page');
-      return { name: 'login' };
+      console.log('redirecting to Registration page');
+      return { name: 'register' };
     }
     if (to.name === 'login' && (await auth.getSession())) {
       console.log('Already logged in.');

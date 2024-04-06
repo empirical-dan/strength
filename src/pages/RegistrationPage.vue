@@ -135,9 +135,7 @@ function handleSubmit() {
               />
             </q-card-actions>
             <q-card-section class="row flex-center">
-              <RouterLink to="/login" class="text-grey-6">
-                Return to login</RouterLink
-              >
+              <RouterLink to="/login" class="text-grey-6"> Login</RouterLink>
             </q-card-section>
           </q-card>
         </div>
