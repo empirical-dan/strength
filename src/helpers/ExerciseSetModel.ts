@@ -2,6 +2,7 @@ import { ExerciseSet } from 'src/types/ExerciseSet';
 import { Ref } from 'vue';
 
 export function addSet(
+  userId: string,
   sets: Ref<ExerciseSet[]>,
   selectedSetId: Ref<number>,
   copy?: boolean
@@ -21,7 +22,7 @@ export function addSet(
   // for every set from the position of newRowId
   // advance the rowId by 1:
   for (let idx = newRowId; idx < numSets; idx++) {
-    sets.value[idx].id++;
+    sets.value[idx].set_number++;
   }
   let newRow: ExerciseSet;
 
@@ -30,14 +31,15 @@ export function addSet(
     newRow = { ...sets.value[selectedSetId.value] };
     console.log('Set copied: ');
     console.log(newRow);
-    newRow.id = newRowId;
+    newRow.set_number = newRowId;
   } else {
     console.log('Adding empty row...');
     newRow = {
       id: newRowId,
+      set_number: newRowId,
       workout_id: 1,
       exercise_id: 1,
-      user_id: 1,
+      user_id: userId,
       target_weight: null,
       target_reps: null,
       target_rpe: null,
@@ -46,7 +48,7 @@ export function addSet(
       actual_rpe: null,
       e1rm: null,
       percentage_max: null,
-      notes: null,
+      note: null,
     };
   }
 
@@ -75,7 +77,7 @@ export function removeSet(
   console.log(sets.value[selectedSetId.value]);
   // need to decrement id for each set after the removed row
   for (let idx = selectedSetId.value; idx < numSets; idx++) {
-    sets.value[idx].id--;
+    sets.value[idx].set_number--;
   }
 
   const removed = sets.value.splice(selectedSetId.value, 1);
@@ -105,8 +107,8 @@ export function moveSetUp(
   // increment the id of the set above
   // swap places of the two changed sets
 
-  sets.value[selectedSetId.value].id--;
-  sets.value[selectedSetId.value - 1].id++;
+  sets.value[selectedSetId.value].set_number--;
+  sets.value[selectedSetId.value - 1].set_number++;
 
   sets.value = [
     ...sets.value.slice(0, selectedSetId.value - 1),
@@ -134,8 +136,8 @@ export function moveSetDown(
   // increment the id of the set above
   // swap places of the two changed sets
 
-  sets.value[selectedSetId.value].id++;
-  sets.value[selectedSetId.value + 1].id--;
+  sets.value[selectedSetId.value].set_number++;
+  sets.value[selectedSetId.value + 1].set_number--;
 
   sets.value = [
     ...sets.value.slice(0, selectedSetId.value),
@@ -208,7 +210,7 @@ export function isValidSet(set: ExerciseSet) {
     isValidReps(set.actual_reps) &&
     isValidRpe(set.target_rpe) &&
     isValidRpe(set.actual_rpe) &&
-    isValidNotes(set.notes)
+    isValidNotes(set.note)
   ) {
     return true;
   } else return false;

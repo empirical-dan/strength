@@ -1,8 +1,12 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from 'src/stores/auth';
 
 const $q = useQuasar();
+const router = useRouter();
+const auth = useAuthStore();
 
 const leftDrawerOpen = ref(false);
 const isDarkMode = ref($q.dark.isActive);
@@ -11,6 +15,13 @@ const tab = ref('Squat');
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
+
+async function signOut() {
+  if (await auth.signOut()) {
+    router.push('/login');
+  }
+}
+
 watch(isDarkMode, () => {
   $q.dark.toggle();
   console.log($q.dark.isActive);
@@ -60,7 +71,7 @@ watch(isDarkMode, () => {
           :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'"
         />
       </q-toolbar>
-      <q-card :class="!isDarkMode ? 'shadow-up-2 shadow-4' : 'no-shadow '"
+      <q-card class="shadow-up-2 shadow-4"
         ><q-tabs
           v-model="tab"
           class="text-primary"
@@ -71,6 +82,7 @@ watch(isDarkMode, () => {
           narrow-indicator
         >
           <q-btn
+            :disable="!auth.isLoggedIn"
             class="q-ml-sm q-pl-xs"
             flat
             round
@@ -160,11 +172,19 @@ watch(isDarkMode, () => {
             >Planner</q-item-section
           >
         </q-item>
-        <q-item clickable v-ripple>
+
+        <q-item v-show="auth.isLoggedIn" clickable v-ripple @click="signOut">
           <q-item-section avatar>
-            <q-icon name="help" size="md" color="primary" class="q-py-sm" />
+            <q-icon
+              name="sym_o_logout"
+              size="md"
+              color="primary"
+              class="q-py-sm"
+            />
           </q-item-section>
-          <q-item-section class="text-h6 text-weight-bold">Help</q-item-section>
+          <q-item-section class="text-h6 text-weight-bold"
+            >Sign Out</q-item-section
+          >
         </q-item>
       </q-list>
     </q-drawer>
@@ -174,8 +194,9 @@ watch(isDarkMode, () => {
   </q-layout>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 :deep(.q-toolbar.no-hover .q-focus-helper) {
   display: none;
 }
 </style>
+src/stores/auth

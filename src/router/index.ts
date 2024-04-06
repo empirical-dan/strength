@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 
 import routes from './routes';
+import { useAuthStore } from 'src/stores/auth';
 
 /*
  * If not building with SSR mode, you can
@@ -20,9 +21,11 @@ import routes from './routes';
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
+    : process.env.VUE_ROUTER_MODE === 'history'
+    ? createWebHistory
+    : createWebHashHistory;
 
-  const Router = createRouter({
+  const router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
@@ -32,5 +35,48 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  return Router;
+  router.beforeEach(async (to) => {
+    const auth = useAuthStore();
+
+    if (
+      // make sure the user is authenticated
+      // ❗️ Avoid an infinite redirect
+      to.name !== 'login' &&
+      to.name !== 'register' &&
+      !(await auth.getSession())
+    ) {
+      // redirect the user to the Registration page
+      console.log('auth.getSession() === false');
+      console.log('redirecting to Registration page');
+      return { name: 'register' };
+    }
+    if (to.name === 'login' && (await auth.getSession())) {
+      console.log('Already logged in.');
+      console.log('redirecting to homepage');
+      return { name: '/' };
+    }
+    if (to.name === 'register' && (await auth.getSession())) {
+      console.log('Already logged in.');
+      console.log('redirecting to homepage');
+      return { name: '/' };
+    }
+  });
+
+  //   // else if (!requiresAuth && currentUser) next('/');
+  //   else {
+  //     next();
+  //   }
+  // });
+
+  // Router.beforeEach(async (to, from, next) => {
+  //   // get current user info
+  //   const currentUser = (await supabase.auth.getSession()).data.session?.user;
+  //   console.log(currentUser);
+  //   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+  //   if (requiresAuth && !currentUser) next('/login');
+  //   // else if (!requiresAuth && currentUser) next('/');
+  //   else next();
+  // });
+  return router;
 });

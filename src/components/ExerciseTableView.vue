@@ -1,100 +1,75 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { defineComponent, onMounted, ref, watch } from 'vue';
 import { ExerciseSet } from '../types/ExerciseSet';
 import { ExerciseTableColumn } from '../types/ExerciseTableColumn';
 import { Units } from 'src/types/Units';
 import { useQuasar } from 'quasar';
-import {
-  addSet,
-  removeSet,
-  moveSetUp,
-  moveSetDown,
-  isValidWeight,
-  isValidReps,
-  isValidRpe,
-  isValidNotes,
-  isValidSet,
-} from '../helpers/ExerciseSetModel';
+import { useSetsStore } from 'src/stores/sets';
+import DbErrorDialog from './DbErrorDialog.vue';
 
+const sets = useSetsStore();
 const $q = useQuasar();
+const invalid = ref(false);
+const dbError = ref(false);
+const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
+const loading = ref(false);
+
+defineComponent({
+  name: 'ExerciseTableView',
+});
 
 export type Props = {
   title?: string;
   units?: Units;
-  // exerciseSets?: ExerciseSet[];
 };
-
 const props = withDefaults(defineProps<Props>(), {
   title: 'New Exercise',
   units: 'kg',
-  // exerciseSets: () =>
-  //   // object and array default props must be assigned via a factory
-  //   <ExerciseSet[]>[],
-});
-
-// const radio = ref(null);
-
-const invalid = ref(false);
-
-const selectedRowId = defineModel<number>('selectedSetId', { default: -1 });
-const rows = defineModel<ExerciseSet[]>('exerciseSets', {
-  default: <ExerciseSet[]>[],
 });
 
 onMounted(() => {
   console.log('TableView: Rendered');
-  console.log('TableView: selectedRowId=' + selectedRowId.value);
+  console.log('TableView: selectedRowId=' + selectedSetId.value);
   console.log('Set = ');
-  if (selectedRowId.value >= 0) {
-    console.log(rows[selectedRowId.value].value);
+  if (selectedSetId.value >= 0) {
+    console.log(sets.data[selectedSetId.value]);
   }
 });
 
-watch(selectedRowId, (newValue, oldValue) => {
-  // don't perform validation if there are no rows or if the last row was just deleted
-  if (oldValue === -1 || newValue === -1) {
+// Perform validation of data when attempting to change row by whatever means:
+watch(selectedSetId, (newValue, oldValue) => {
+  // don't perform validation if there are no rows or if the row was just deleted
+  if (oldValue === -1 || newValue === -1 || sets.data[oldValue] === undefined) {
     return;
   }
-  if (!isValidSet(rows.value[oldValue])) {
-    selectedRowId.value = oldValue;
+  console.log('performing row data validation:');
+  console.log('old rowId = ' + oldValue);
+  console.log(sets.data[oldValue]);
+  console.log('new rowId = ' + newValue);
+  if (!sets.isValidSet(sets.data[oldValue])) {
+    selectedSetId.value = oldValue;
     invalid.value = true;
     console.log('Invalid weight in set: ' + oldValue);
   }
-
-  console.log('Set changed in ExerciseTableView. id=' + selectedRowId.value);
+  console.log('Set changed in ExerciseTableView. id=' + selectedSetId.value);
   console.log('Set in ExerciseTableView = ');
-
   // validate oldSelectedSet in ExerciseFieldView before re-rendering
   // or maybe get selectRow to call all the validation methods and refuse to change rows if it fails.
-
   console.log('Old set was id=' + oldValue);
-
-  // reload();
 });
-
-// function changeRow(value: number, evt: Event) {
-//   console.log('Radio button selected. Trying to change row to: ' + value);
-//   console.log(
-//     'Radio button previously selected row was: ' + selectedRowId.value
-//   );
-//   console.log(evt);
-//   console.log('Radio button that was selected = ');
-//   console.log(radio.value);
-// }
 
 function selectRow(id: number): boolean {
   // only perform re-validation on selecting a new row or it becomes intrusive
-  if (id === selectedRowId.value) {
+  if (id === selectedSetId.value) {
     return true;
   }
-  if (!isValidSet(rows.value[selectedRowId.value])) {
+  if (!sets.isValidSet(sets.data[selectedSetId.value])) {
     invalid.value = true;
     return false;
   }
-
   console.log('SELECTING NEW ROW... id = ' + id);
-  console.log(rows.value[id]);
-  selectedRowId.value = id;
+  console.log(sets.data[id]);
+  selectedSetId.value = id;
   return true;
 }
 
@@ -102,28 +77,51 @@ const pagination = ref({
   rowsPerPage: 0,
 });
 
-const rowCount = ref(rows.value.length);
-
-function addRow(copy?: boolean) {
+async function addRow(copy?: boolean) {
+  loading.value = true;
   if (copy === undefined) {
     copy = false;
   }
+
   // add a new set.
-  // then select the set that was just added
-  selectedRowId.value = addSet(rows, selectedRowId, copy);
+  // then select the set that was just added.
+  // take this out and put userId into the Sets store
+  const { success, row } = await sets.addSet(selectedSetId.value, copy);
+  selectedSetId.value = row;
+  if (!success) {
+    dbError.value = true;
+  }
+  loading.value = false;
 }
 
-function removeRow() {
-  selectedRowId.value = removeSet(rows, selectedRowId);
-  console.log('Row count = ' + rowCount.value);
+async function removeRow() {
+  loading.value = true;
+  const { success, row } = await sets.removeSet(selectedSetId.value);
+  selectedSetId.value = row;
+  if (!success) {
+    dbError.value = true;
+
+    // selectedSetId.value = sets.removeSet(selectedSetId.value);
+  }
+  loading.value = false;
 }
+
+// function removeRow() {
+//   selectedRowId.value = sets.removeSet(selectedRowId.value);
+//   console.log('Row count = ');
+//   console.log(sets.rowCount);
+// }
 
 function moveRowUp() {
-  selectedRowId.value = moveSetUp(rows, selectedRowId);
+  loading.value = true;
+  selectedSetId.value = sets.moveSetUp(selectedSetId.value);
+  loading.value = false;
 }
 
 function moveRowDown() {
-  selectedRowId.value = moveSetDown(rows, selectedRowId);
+  loading.value = true;
+  selectedSetId.value = sets.moveSetDown(selectedSetId.value);
+  loading.value = false;
 }
 
 const columns: ExerciseTableColumn[] = [
@@ -141,7 +139,7 @@ const columns: ExerciseTableColumn[] = [
     required: true,
     label: 'Set',
     align: 'center',
-    field: (set: ExerciseSet) => '#' + set.id + 1,
+    field: (set: ExerciseSet) => '#' + set.set_number + 1,
     sortable: false,
   },
   {
@@ -210,11 +208,11 @@ const columns: ExerciseTableColumn[] = [
     sortable: false,
   },
   {
-    name: 'notes',
+    name: 'note',
     required: false,
     label: 'Notes',
     align: 'left',
-    field: (set: ExerciseSet) => set.notes + '',
+    field: (set: ExerciseSet) => set.note + '',
     sortable: false,
   },
 ];
@@ -223,9 +221,9 @@ const visibleColumns = ref(
   columns
     .filter((column) => {
       if ($q.platform.is.mobile) {
-        return column.name !== 'notes';
+        return column.name !== 'note';
       } else {
-        return column.required === false && column.name !== 'notes';
+        return column.required === false && column.name !== 'note';
       }
     })
     .map((column) => column.name)
@@ -234,33 +232,33 @@ const visibleColumns = ref(
 const errorWeight = ref(false);
 const errorMessageWeight = ref('');
 function weightRangeValidation(val: number | string | null | undefined) {
-  if (isValidWeight(val)) {
+  if (sets.isValidWeight(val)) {
     errorWeight.value = false;
     errorMessageWeight.value = '';
     return true;
   }
   errorWeight.value = true;
-  errorMessageWeight.value = `0-999 (to 0.25 ${props.units})`;
+  errorMessageWeight.value = `0-9999 (to 0.25 ${props.units})`;
   return false;
 }
 
 const errorReps = ref(false);
 const errorMessageReps = ref('');
 function repRangeValidation(val?: number) {
-  if (isValidReps(val)) {
+  if (sets.isValidReps(val)) {
     errorReps.value = false;
     errorMessageReps.value = '';
     return true;
   }
   errorReps.value = true;
-  errorMessageReps.value = '0-99 (to 1)';
+  errorMessageReps.value = '0-999 (to 1)';
   return false;
 }
 
 const errorRpe = ref(false);
 const errorMessageRpe = ref('');
 function rpeRangeValidation(val?: number) {
-  if (isValidRpe(val)) {
+  if (sets.isValidRpe(val)) {
     errorRpe.value = false;
     errorMessageRpe.value = '';
     return true;
@@ -272,8 +270,8 @@ function rpeRangeValidation(val?: number) {
 
 const errorNotes = ref(false);
 const errorMessageNotes = ref('');
-function notesValidation(val?: string) {
-  if (isValidNotes(val)) {
+function noteValidation(val?: string) {
+  if (sets.isValidNotes(val)) {
     errorNotes.value = false;
     errorMessageNotes.value = '';
     return true;
@@ -300,13 +298,13 @@ function notesValidation(val?: string) {
             text-color="white"
             class="q-mr-md"
           />
-          Set {{ selectedRowId + 1 }}
+          Set {{ selectedSetId + 1 }}
         </div>
       </q-card-section>
       <q-card>
         <q-card-section class="q-mx-sm">
-          <strong>Please validate data:</strong><br />Weights: 0-999
-          {{ units }} (to nearest 0.25). <br />Repetitions: 0-99 (whole
+          <strong>Please validate data:</strong><br />Weights: 0-9999
+          {{ units }} (to nearest 0.25). <br />Repetitions: 0-999 (whole
           numbers). <br />RPE: 0-10 (to nearest 0.5). <br />Notes: Maximum 100
           characters.
         </q-card-section>
@@ -323,10 +321,10 @@ function notesValidation(val?: string) {
       bordered
       dense
       :title="props.title"
-      :rows="rows"
+      :rows="sets.data"
       :columns="columns"
       :visible-columns="visibleColumns"
-      row-key="id"
+      row-key="set_number"
       virtual-scroll
       v-model:pagination="pagination"
       :rows-per-page-options="[0]"
@@ -334,64 +332,71 @@ function notesValidation(val?: string) {
       no-data-label="Please add a Set to begin."
     >
       <template #top>
-        <q-btn
-          :disable="selectedRowId === -1"
-          dense
-          glossy
-          push
-          color="primary"
-          icon="sym_o_playlist_add"
-          @click="addRow(true)"
-        >
-          <q-tooltip v-if="!$q.platform.is.mobile">Copy Set</q-tooltip>
-        </q-btn>
-        <q-btn
-          dense
-          class="q-ml-sm"
-          glossy
-          push
-          color="primary"
-          icon="sym_o_docs_add_on"
-          @click="addRow(false)"
-        >
-          <q-tooltip v-if="!$q.platform.is.mobile">Add Empty Set</q-tooltip>
-        </q-btn>
-        <q-btn
-          :disable="selectedSetId === -1"
-          dense
-          glossy
-          push
-          class="q-ml-sm"
-          color="primary"
-          icon="sym_o_playlist_remove"
-          @click="removeRow"
-        >
-          <q-tooltip v-if="!$q.platform.is.mobile">Remove Set</q-tooltip>
-        </q-btn>
-        <q-btn
-          :disable="selectedSetId === -1"
-          dense
-          glossy
-          push
-          class="q-ml-sm"
-          color="primary"
-          icon="sym_o_arrow_upward"
-          @click="moveRowUp"
-        >
-          <q-tooltip v-if="!$q.platform.is.mobile">Move Up</q-tooltip>
-        </q-btn>
-        <q-btn
-          :disable="selectedSetId === -1"
-          dense
-          glossy
-          push
-          class="q-ml-sm"
-          color="primary"
-          icon="sym_o_arrow_downward"
-          @click="moveRowDown"
-        >
-          <q-tooltip v-if="!$q.platform.is.mobile">Move Down</q-tooltip>
-        </q-btn>
+        <q-btn-group outline push>
+          <q-btn
+            :disable="selectedSetId === -1"
+            dense
+            glossy
+            push
+            color="primary"
+            icon="sym_o_playlist_add"
+            @click="addRow(true)"
+            :loading="loading"
+          >
+            <q-tooltip v-if="!$q.platform.is.mobile">Copy Set</q-tooltip>
+          </q-btn>
+          <q-btn
+            dense
+            class="q-ml-sm"
+            glossy
+            push
+            color="primary"
+            icon="sym_o_docs_add_on"
+            @click="addRow(false)"
+            :loading="loading"
+          >
+            <q-tooltip v-if="!$q.platform.is.mobile">Add Empty Set</q-tooltip>
+          </q-btn>
+          <q-btn
+            :disable="selectedSetId === -1"
+            dense
+            glossy
+            push
+            class="q-ml-sm"
+            color="primary"
+            icon="sym_o_playlist_remove"
+            @click="removeRow"
+            :loading="loading"
+          >
+            <q-tooltip v-if="!$q.platform.is.mobile">Remove Set</q-tooltip>
+          </q-btn>
+          <q-btn
+            :disable="selectedSetId === -1"
+            dense
+            glossy
+            push
+            class="q-ml-sm"
+            color="primary"
+            icon="sym_o_arrow_upward"
+            @click="moveRowUp"
+            :loading="loading"
+          >
+            <q-tooltip v-if="!$q.platform.is.mobile">Move Up</q-tooltip>
+          </q-btn>
+          <q-btn
+            :disable="selectedSetId === -1"
+            dense
+            glossy
+            push
+            class="q-ml-sm"
+            color="primary"
+            icon="sym_o_arrow_downward"
+            @click="moveRowDown"
+            :loading="loading"
+          >
+            <q-tooltip v-if="!$q.platform.is.mobile">Move Down</q-tooltip>
+          </q-btn>
+        </q-btn-group>
         <q-space></q-space>
         <q-select
           v-model="visibleColumns"
@@ -415,11 +420,11 @@ function notesValidation(val?: string) {
         <q-tr :props="props">
           <q-radio
             :key="props.rowIndex"
-            v-model="selectedRowId"
+            v-model="selectedSetId"
             :val="props.rowIndex"
           />
           <q-td key="set_number" :props="props">
-            {{ '#' + (props.row.id + 1) }}
+            {{ '#' + props.row.set_number }}
           </q-td>
           <q-td key="target_weight" :props="props" class="cursor-pointer">
             {{
@@ -440,7 +445,7 @@ function notesValidation(val?: string) {
                 type="number"
                 step="0.25"
                 min="0"
-                max="999"
+                max="9999"
                 v-model.number="scope.value"
                 :error="errorWeight"
                 :error-message="errorMessageWeight"
@@ -470,7 +475,7 @@ function notesValidation(val?: string) {
                 type="number"
                 step="1"
                 min="0"
-                max="99"
+                max="999"
                 v-model.number="scope.value"
                 :error="errorReps"
                 :error-message="errorMessageReps"
@@ -531,7 +536,7 @@ function notesValidation(val?: string) {
                 type="number"
                 step="0.25"
                 min="0"
-                max="999"
+                max="9999"
                 v-model.number="scope.value"
                 :error="errorWeight"
                 :error-message="errorMessageWeight"
@@ -560,7 +565,7 @@ function notesValidation(val?: string) {
                 type="number"
                 step="1"
                 min="0"
-                max="99"
+                max="999"
                 v-model.number="scope.value"
                 :error="errorReps"
                 :error-message="errorMessageReps"
@@ -610,14 +615,14 @@ function notesValidation(val?: string) {
               props.row.percentage_max ? props.row.percentage_max + ' %' : ''
             }}
           </q-td>
-          <q-td key="notes" :props="props" class="cursor-pointer" width="100%">
-            {{ props.row.notes }}
+          <q-td key="note" :props="props" class="cursor-pointer" width="20%">
+            {{ props.row.note }}
             <q-popup-edit
               v-if="!$q.fullscreen.isActive || !$q.platform.is.mobile"
-              v-model="props.row.notes"
+              v-model="props.row.note"
               auto-save
-              :validate="notesValidation"
-              @hide="notesValidation"
+              :validate="noteValidation"
+              @hide="noteValidation"
               v-slot="scope"
             >
               <q-input
@@ -638,6 +643,8 @@ function notesValidation(val?: string) {
       <!-- <template #bottom> Selected row id={{ selectedRowId }} </template> -->
     </q-table>
   </div>
+
+  <DbErrorDialog v-model="dbError"></DbErrorDialog>
 </template>
 
 <style>

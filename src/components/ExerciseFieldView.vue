@@ -2,14 +2,11 @@
 import { ExerciseSet } from 'src/types/ExerciseSet';
 import { Units } from 'src/types/Units';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
-import {
-  addSet,
-  removeSet,
-  calculateE1rm,
-  calculatePercentageMax,
-  copyTargetValues,
-  isValidWeight,
-} from 'src/helpers/ExerciseSetModel';
+import { useSetsStore } from 'src/stores/sets';
+import DbErrorDialog from 'src/components/DbErrorDialog.vue';
+const sets = useSetsStore();
+const dbError = ref(false);
+const loading = ref(false);
 
 defineComponent({
   name: 'ExerciseFieldView',
@@ -17,11 +14,11 @@ defineComponent({
 
 const weightRules = [
   (val: number) =>
-    (val >= 0 && val < 1000 && val % 0.25 === 0) ||
-    `0-999 (to 0.25 ${props.units})`,
+    (val >= 0 && val < 10000 && val % 0.25 === 0) ||
+    `0-9999 (to 0.25 ${props.units})`,
 ];
 const repsRules = [
-  (val: number) => (val >= 0 && val < 100 && val % 1 === 0) || '0-99 (to 1)',
+  (val: number) => (val >= 0 && val < 1000 && val % 1 === 0) || '0-999 (to 1)',
 ];
 const rpeRules = [
   (val: number) =>
@@ -35,22 +32,19 @@ const notesRules = [
 
 export type Props = {
   units?: Units;
-  // exerciseSet?: ExerciseSet;
 };
 
 const props = withDefaults(defineProps<Props>(), {
   units: 'kg',
 });
 
-const rows = defineModel<ExerciseSet[]>('exerciseSets', {
-  default: <ExerciseSet[]>[],
-});
 const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
 const row = ref<ExerciseSet>({
   id: -1,
+  set_number: -1,
   workout_id: 1,
   exercise_id: 1,
-  user_id: 1,
+  user_id: '',
   target_weight: null,
   target_reps: null,
   target_rpe: null,
@@ -59,41 +53,35 @@ const row = ref<ExerciseSet>({
   actual_rpe: null,
   e1rm: null,
   percentage_max: null,
-  notes: null,
+  note: null,
 });
 
-if (rows.value?.length) {
-  row.value = rows.value[selectedSetId.value];
+if (sets.data.length) {
+  row.value = sets.data[selectedSetId.value];
 }
 
 const percentageMax = computed(() => {
-  if (
-    typeof row.value.actual_reps !== 'number' ||
-    typeof row.value.actual_rpe !== 'number'
-  ) {
-    return null;
+  const rowId = selectedSetId.value;
+  if (rowId === -1) return;
+  if (typeof rowId === 'number') {
+    const value = sets.calculatePercentageMax(rowId);
+    if (value) {
+      return Math.round(value);
+    }
   }
-  row.value.percentage_max;
-  return Math.round(
-    calculatePercentageMax(row.value.actual_reps, row.value.actual_rpe)
-  );
+  return null;
 });
 
 const e1rm = computed(() => {
-  if (
-    typeof row.value.actual_reps !== 'number' ||
-    typeof row.value.actual_rpe !== 'number' ||
-    typeof row.value.actual_weight !== 'number'
-  ) {
-    return null;
+  const rowId = selectedSetId.value;
+  if (rowId === -1) return;
+  if (typeof rowId === 'number') {
+    const value = sets.calculateE1rm(rowId);
+    if (value) {
+      return Math.round(value);
+    }
   }
-  return Math.round(
-    calculateE1rm(
-      row.value.actual_reps,
-      row.value.actual_rpe,
-      row.value.actual_weight
-    )
-  );
+  return null;
 });
 
 onMounted(() => {
@@ -104,28 +92,47 @@ onMounted(() => {
   console.log(row.value);
 });
 
-function addRow(copy?: boolean) {
+async function addRow(copy?: boolean) {
+  loading.value = true;
   if (copy === undefined) {
     copy = false;
   }
   // add a new set
   // then select the set that was just added
-  selectedSetId.value = addSet(rows, selectedSetId, copy);
+  const { success, row } = await sets.addSet(selectedSetId.value, copy);
+  selectedSetId.value = row;
+  if (!success) {
+    dbError.value = true;
+  }
+  loading.value = false;
 }
 
-function removeRow() {
-  selectedSetId.value = removeSet(rows, selectedSetId);
+async function removeRow() {
+  loading.value = true;
+  const { success, row } = await sets.removeSet(selectedSetId.value);
+  selectedSetId.value = row;
+  if (!success) {
+    dbError.value = true;
+
+    // selectedSetId.value = sets.removeSet(selectedSetId.value);
+  }
+  loading.value = false;
 }
 
-function copyTargets() {
-  copyTargetValues(row);
+async function copyTargets() {
+  loading.value = true;
+  if (!(await sets.copyTargetValues(selectedSetId.value))) {
+    dbError.value = true;
+    console.log('Unable to save to DB');
+  }
+  loading.value = false;
 }
 
 watch(selectedSetId, () => {
   console.log('Set changed in FieldView. id=' + selectedSetId.value);
   console.log('Set in FieldView = ');
   if (selectedSetId.value !== null && selectedSetId.value >= 0) {
-    console.log(rows.value[selectedSetId.value]);
+    console.log(sets.data[selectedSetId.value]);
   } else {
     console.log('Empty set');
   }
@@ -156,7 +163,7 @@ watch(e1rm, () => {
       type="number"
       step="0.25"
       min="0"
-      max="999"
+      max="9999"
       :suffix="units"
       outlined
       dark
@@ -165,7 +172,6 @@ watch(e1rm, () => {
       label="Target Weight"
       :rules="weightRules"
       hide-bottom-space
-      v-close-popup="!isValidWeight(row.target_weight)"
     />
     <q-input
       :disable="selectedSetId === -1"
@@ -175,7 +181,7 @@ watch(e1rm, () => {
       type="number"
       step="1"
       min="0"
-      max="99"
+      max="999"
       outlined
       dark
       color="white"
@@ -213,6 +219,7 @@ watch(e1rm, () => {
       glossy
       style="min-height: 5vh"
       @click="copyTargets"
+      :loading="loading"
     >
       <q-tooltip>Copy Target Values</q-tooltip>
     </q-btn>
@@ -225,7 +232,7 @@ watch(e1rm, () => {
       type="number"
       step="0.25"
       min="0"
-      max="999"
+      max="9999"
       :suffix="units"
       outlined
       dark
@@ -244,7 +251,7 @@ watch(e1rm, () => {
       type="number"
       step="1"
       min="0"
-      max="99"
+      max="999"
       outlined
       dark
       color="white"
@@ -278,7 +285,7 @@ watch(e1rm, () => {
       :disable="selectedSetId === -1"
       class="div8"
       tabindex="7"
-      v-model="row.notes"
+      v-model="row.note"
       type="text"
       outlined
       dark
@@ -328,6 +335,7 @@ watch(e1rm, () => {
       glossy
       style="min-height: 5vh"
       @click="addRow(true)"
+      :loading="loading"
     >
       <q-tooltip>Copy Set</q-tooltip>
     </q-btn>
@@ -340,6 +348,7 @@ watch(e1rm, () => {
       glossy
       style="min-height: 5vh"
       @click="addRow(false)"
+      :loading="loading"
     >
       <q-tooltip>Add Empty Set</q-tooltip>
     </q-btn>
@@ -353,10 +362,13 @@ watch(e1rm, () => {
       glossy
       style="min-height: 5vh"
       @click="removeRow"
+      :loading="loading"
     >
       <q-tooltip>Remove Set</q-tooltip>
     </q-btn>
   </div>
+
+  <DbErrorDialog v-model="dbError"> </DbErrorDialog>
 </template>
 
 <style>
@@ -412,3 +424,4 @@ watch(e1rm, () => {
   font-size: 1rem;
 } */
 </style>
+src/stores/auth
