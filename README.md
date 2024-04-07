@@ -29,6 +29,8 @@ Strength Stuδi/o was initially developed mainly using TypeScript with Vue 3, th
 Back end:
 A back end framework with a RESTful API such as Python Django Ninja was considered at the outset of the project. The initial vision was to achieve as much separation as possible between models and views and to use an Object Relational Model rather than interacting with a relational database directly. The early code was based on a desktop GUI developed developed in Qt for Python that uses an SQL database (SQLite/PostgreSQL). It was found that Vue 3 and TypeScript make it quite possible to separate the logic in code well. Also, Backend as a Service facilites (specifically Supabase) appeared to be relatively mature and cheap/free for the amount of usage at the time (early 2024). Developing a separate RESTful API would have been an additional barrier to producing a working prototype. Supabase provides a useful JavaScript/TypeScript API and developing a separate RESTful API may not add much.
 
+The structure of the data is highly relational. The smallest unit is the Set and a collection of Sets belong to an Exercise that is performed during a particular Workout. Exercises may be repeated as part of different Workouts. Exercises can have different modifiers that can be applied to customise them. There is some natural overlap when categorising exercises either using distinct names or by decorating more basice movements. For example, should you just have a general "Raise" Exercise (under the bodybuilding category) and frequently apply modifiers such as "Front", "Lateral" and "Calf". This may be the more general solution. However, "Lateral Raise" is such a commonly performed exercise in some circles that it may be easier for users to give it its own exercise designation rather than always having to apply modifiers. Do you build this in as standard and do you allow individuals to customise the settings or let the direction be driven by the majority of users? The initial relational structure was developed with experience of using SQL for large biological datasets. This continues to evolve to provide the best possible foundation for the UI.      
+
 
 # How to use Strength Stuδi/o
 Please try out Strength Stuδi/o by following the link to the website: https://strength-seven.vercel.app
@@ -39,17 +41,35 @@ You can also download your own copy of Strength Stuδi/o from this repository to
 You will also either need to connect to your own supabase instance or ask one of the Strength Stuδi/o developers for the URL and anon key. 
 
 
-# How to contribute
-Strength Stuδi/o welcomes contributions from all and aspires to be a thriving community project. Please contribute comments, suggestions and code via GitHub but please aim to always be open, friendly and respecteful to everyone. Strength Stuδi/o's primary philosphy is to grow and become more usable over time. This is open to interpretation and involves making difficult and sometimes relatively arbitrary decisions that will not always please everyone. Please don't take this personally.
+# How to participate
+Strength Stuδi/o welcomes contributions from all and aspires to be a thriving community project. Please contribute comments, suggestions and code via GitHub but please aim to always be open, friendly and respecteful to everyone. Strength Stuδi/o's primary philosphy is to grow and become more usable over time. This is open to interpretation and involves making difficult and sometimes relatively arbitrary decisions that will not always please everyone. Please don't take this personally. Participation is a form of collaborative appreciation.
+Strength Stuδi/o is seeking developers to help maintain the project. It was started as a solo hobby project with aims for the greater good. Any future sponsorship would be spent exclusively on developing Strength Strength Stuδi/o - please contact danhornan@gmail.com for details.
+
 
 # Todos/Wishlist
+Basic workout documenting:
+- Calendar (open/copy/save/new workout)
+- Add Exercise
+- Add modifiers
+- Exercise history, particularly facility to add sets from history
+- Exercise planner i.e. working sets based on particular number of reps and RPE/percentage
 
+Login/Registration
+- Basic forgot/reset password 
 
+Biometrics
+- Graphs and/or tables of progress in estimated maxes/real maxes/training load
+- Recording and visualisation of other biometrics such as body weight and VO2 max
 
+Training block planning
+- Facility to plan more than one workout at a time i.e. a series of workouts
+- Custom training blocks
+- Assisted planning e.g. basic periodisation and/or templates without being too prescriptive
 
-- 
+Import/export
+- Facility to import/export to spreadsheets
 
-
+Basic desktop GUI illustration:
 ![Screenshot 2024-04-07 213025](https://github.com/empirical-dan/strength/assets/52764820/b2778611-76fc-4002-9baa-42f8a57584e6)
 ![Screenshot 2024-04-07 213231](https://github.com/empirical-dan/strength/assets/52764820/b0d57d6c-cc0f-40a3-a8b2-0fb00675e949)
 ![Screenshot 2024-04-07 213335](https://github.com/empirical-dan/strength/assets/52764820/c6e8de00-0834-49b4-8d3a-bb3278a3294f)
