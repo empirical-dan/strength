@@ -48,8 +48,9 @@ Strength Stuδi/o welcomes contributions from all and aspires to be a thriving c
 ![Screenshot 2024-04-07 213025](https://github.com/empirical-dan/strength/assets/52764820/b2778611-76fc-4002-9baa-42f8a57584e6)
 
 ![Screenshot 2024-04-07 213231](https://github.com/empirical-dan/strength/assets/52764820/b0d57d6c-cc0f-40a3-a8b2-0fb00675e949)
+![Screenshot 2024-04-07 213335](https://github.com/empirical-dan/strength/assets/52764820/c6e8de00-0834-49b4-8d3a-bb3278a3294f)
 
-![Screenshot 2024-04-07 213231](https://github.com/empirical-dan/strength/assets/52764820/c2979dc8-28db-4073-983d-0b1d782339e6)
+
 
 
 ## Install the dependencies
