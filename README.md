@@ -81,6 +81,7 @@ https://github.com/empirical-dan/strength/assets/52764820/6a7e1be9-44e9-4c7d-9e2
 
 
 
+
 ## Install the dependencies
 
 ```bash
