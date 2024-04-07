@@ -70,9 +70,12 @@ Import/export
 - Facility to import/export to spreadsheets
 
 Basic desktop GUI illustration:
+
 ![Screenshot 2024-04-07 213025](https://github.com/empirical-dan/strength/assets/52764820/b2778611-76fc-4002-9baa-42f8a57584e6)
 ![Screenshot 2024-04-07 213231](https://github.com/empirical-dan/strength/assets/52764820/b0d57d6c-cc0f-40a3-a8b2-0fb00675e949)
 ![Screenshot 2024-04-07 213335](https://github.com/empirical-dan/strength/assets/52764820/c6e8de00-0834-49b4-8d3a-bb3278a3294f)
+
+Example of desktop GUI New Exercise menu:
 https://github.com/empirical-dan/strength/assets/52764820/6a7e1be9-44e9-4c7d-9e25-0f458e9d1d08
 
 
