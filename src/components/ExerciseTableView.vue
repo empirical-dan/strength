@@ -10,7 +10,7 @@ import DbErrorDialog from './DbErrorDialog.vue';
 const sets = useSetsStore();
 const $q = useQuasar();
 const invalid = ref(false);
-const dbError = ref(false);
+const displayDbErrorDialog = ref(false);
 const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
 const loading = ref(false);
 
@@ -37,9 +37,11 @@ onMounted(() => {
 });
 
 // Perform validation of data when attempting to change row by whatever means:
-watch(selectedSetId, (newValue, oldValue) => {
+watch(selectedSetId, async (newValue, oldValue) => {
+  loading.value = true;
   // don't perform validation if there are no rows or if the row was just deleted
   if (oldValue === -1 || newValue === -1 || sets.data[oldValue] === undefined) {
+    loading.value = false;
     return;
   }
   console.log('performing row data validation:');
@@ -50,15 +52,24 @@ watch(selectedSetId, (newValue, oldValue) => {
     selectedSetId.value = oldValue;
     invalid.value = true;
     console.log('Invalid weight in set: ' + oldValue);
+    loading.value = false;
+    return;
   }
+  // old set has passed validation
+  // try to update it in the database
+  if (!(await sets.updateSet(selectedSetId.value))) {
+    displayDbErrorDialog.value = true;
+  }
+
   console.log('Set changed in ExerciseTableView. id=' + selectedSetId.value);
   console.log('Set in ExerciseTableView = ');
-  // validate oldSelectedSet in ExerciseFieldView before re-rendering
-  // or maybe get selectRow to call all the validation methods and refuse to change rows if it fails.
   console.log('Old set was id=' + oldValue);
+  loading.value = false;
+  return;
 });
 
-function selectRow(id: number): boolean {
+async function selectRow(id: number) {
+  // this function only selects rows from a popup in the table, not using the radio buttons
   // only perform re-validation on selecting a new row or it becomes intrusive
   if (id === selectedSetId.value) {
     return true;
@@ -69,6 +80,7 @@ function selectRow(id: number): boolean {
   }
   console.log('SELECTING NEW ROW... id = ' + id);
   console.log(sets.data[id]);
+
   selectedSetId.value = id;
   return true;
 }
@@ -89,7 +101,7 @@ async function addRow(copy?: boolean) {
   const { success, row } = await sets.addSet(selectedSetId.value, copy);
   selectedSetId.value = row;
   if (!success) {
-    dbError.value = true;
+    displayDbErrorDialog.value = true;
   }
   loading.value = false;
 }
@@ -99,28 +111,28 @@ async function removeRow() {
   const { success, row } = await sets.removeSet(selectedSetId.value);
   selectedSetId.value = row;
   if (!success) {
-    dbError.value = true;
-
-    // selectedSetId.value = sets.removeSet(selectedSetId.value);
+    displayDbErrorDialog.value = true;
   }
   loading.value = false;
 }
 
-// function removeRow() {
-//   selectedRowId.value = sets.removeSet(selectedRowId.value);
-//   console.log('Row count = ');
-//   console.log(sets.rowCount);
-// }
-
-function moveRowUp() {
+async function moveRowUp() {
   loading.value = true;
-  selectedSetId.value = sets.moveSetUp(selectedSetId.value);
+  const { success, row } = await sets.moveSetUp(selectedSetId.value);
+  selectedSetId.value = row;
+  if (!success) {
+    displayDbErrorDialog.value = true;
+  }
   loading.value = false;
 }
 
-function moveRowDown() {
+async function moveRowDown() {
   loading.value = true;
-  selectedSetId.value = sets.moveSetDown(selectedSetId.value);
+  const { success, row } = await sets.moveSetDown(selectedSetId.value);
+  selectedSetId.value = row;
+  if (!success) {
+    displayDbErrorDialog.value = true;
+  }
   loading.value = false;
 }
 
@@ -644,7 +656,7 @@ function noteValidation(val?: string) {
     </q-table>
   </div>
 
-  <DbErrorDialog v-model="dbError"></DbErrorDialog>
+  <DbErrorDialog v-model="displayDbErrorDialog"></DbErrorDialog>
 </template>
 
 <style>

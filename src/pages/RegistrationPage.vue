@@ -7,9 +7,11 @@ import {
 import { useAuthStore } from 'src/stores/auth';
 
 const auth = useAuthStore();
-const isRegistered = ref(false);
+const displayIsRegisteredDialog = ref(false);
 const displayLoggedInDialog = ref(false);
 const displayInvalidDialog = ref(false);
+const displayRegistrationFailedDialog = ref(false);
+const submitting = ref(false);
 
 type accountForm = {
   name: string;
@@ -29,12 +31,16 @@ async function createAccount() {
   // see if user already exists
   if (await auth.signInWithPassword(form.email, form.password)) {
     displayLoggedInDialog.value = true;
-    return;
+    return true;
   }
   if (await auth.signUp(form.email, form.password)) {
-    isRegistered.value = true;
+    displayIsRegisteredDialog.value = true;
+    return true;
   } else {
+    displayRegistrationFailedDialog.value = true;
     console.log('Failed to sign up');
+
+    return false;
   }
 }
 
@@ -49,30 +55,37 @@ const isFormValid = computed(() => {
 });
 
 // Function to handle form submission
-function handleSubmit() {
+async function handleSubmit() {
+  submitting.value = true;
+  console.log('Form Submitted');
   // Validate the form fields
   if (!isFormValid.value) {
     // If there are errors in the form, show an alert indicating that the form is invalid
+    console.log('Invalid form');
     displayInvalidDialog.value = true;
+    submitting.value = false;
     return;
   }
   // If the form is valid, perform some action with the form data
-  createAccount();
+  console.log('Trying to create account');
+  await createAccount();
+  submitting.value = false;
 }
 </script>
 
 <template>
   <q-page class="window-width row justify-center items-center bg-secondary">
-    <q-form @submit.prevent="handleSubmit">
+    <q-form>
       <div class="column q-px-lg">
         <div class="row">
-          <q-card rounded style="width: 300px; height: 485px">
+          <q-card rounded style="width: 300px; height: 475px">
             <q-card-section class="bg-primary">
-              <h4 class="text-h5 text-white q-my-sm">Registration</h4>
+              <h4 class="text-h5 text-white q-my-xs">Registration</h4>
             </q-card-section>
             <q-card-section>
               <q-form class="q-px-sm q-pt-sm">
                 <q-input
+                  tabindex="0"
                   square
                   clearable
                   v-model="form.email"
@@ -90,6 +103,7 @@ function handleSubmit() {
                 </q-input>
 
                 <q-input
+                  tabindex="1"
                   square
                   clearable
                   v-model="form.password"
@@ -101,13 +115,14 @@ function handleSubmit() {
                       useValidatePassword(val).errors[0],
                   ]"
                 >
-                  <!-- 10 or more upper + lower + numeric characters -->
+                  <!-- 10 or more upper + lower + numeric characters + symbol -->
 
                   <template v-slot:prepend>
                     <q-icon name="lock" />
                   </template>
                 </q-input>
                 <q-input
+                  tabindex="2"
                   square
                   clearable
                   v-model="form.confirmPassword"
@@ -122,18 +137,21 @@ function handleSubmit() {
                     <q-icon name="lock" />
                   </template>
                 </q-input>
+
+                <q-btn
+                  class="q-px-lg q-mt-sm full-width text-white"
+                  tabindex="3"
+                  type="submit"
+                  unelevated
+                  size="lg"
+                  color="primary"
+                  label="Register"
+                  @click="handleSubmit"
+                  :loading="submitting"
+                />
               </q-form>
             </q-card-section>
-            <q-card-actions class="q-px-lg q-mt-sm q-pb-none">
-              <q-btn
-                type="submit"
-                unelevated
-                size="lg"
-                color="primary"
-                class="full-width text-white"
-                label="Register"
-              />
-            </q-card-actions>
+
             <q-card-section class="row flex-center">
               <RouterLink to="/login" class="text-grey-6"> Login</RouterLink>
             </q-card-section>
@@ -144,7 +162,39 @@ function handleSubmit() {
   </q-page>
 
   <q-dialog
-    v-model="isRegistered"
+    v-model="displayRegistrationFailedDialog"
+    persistent
+    transition-show="scale"
+    transition-hide="scale"
+  >
+    <q-card>
+      <q-card-section class="bg-secondary">
+        <div style="font-size: 1.5em; font-weight: bold" class="q-mr-md">
+          <q-avatar
+            icon="sym_o_warning"
+            color="primary"
+            text-color="white"
+            class="q-mr-md"
+          />
+          Registration Failed!
+        </div>
+      </q-card-section>
+      <q-card>
+        <q-card-section class="q-mr-md q-ml-lg">
+          <div style="font-size: 1.2em; font-weight: bold" class="q-pb-md">
+            No connection or too many requests.
+          </div>
+          <div class="q-pt-md text-bold">Please try again later</div>
+        </q-card-section>
+      </q-card>
+      <q-card-actions align="right">
+        <q-btn flat label="OK" color="primary" v-close-popup to="/" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-dialog
+    v-model="displayIsRegisteredDialog"
     persistent
     transition-show="scale"
     transition-hide="scale"

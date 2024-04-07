@@ -30,63 +30,61 @@ async function handleSubmit() {
   <!-- style="background: linear-gradient(#8274c5, #5a4a9f)" -->
 
   <q-page class="window-width row justify-center items-center bg-secondary">
-    <form @submit.prevent="handleSubmit">
-      <div class="column q-px-lg">
-        <div class="row">
-          <q-card rounded style="width: 300px; height: 400px">
-            <q-card-section class="bg-primary">
-              <h4 class="text-h5 text-white q-my-sm">Sign in</h4>
-            </q-card-section>
-            <q-card-section>
-              <q-form class="q-px-sm q-pt-sm">
-                <q-input
-                  square
-                  clearable
-                  v-model="form.email"
-                  type="email"
-                  label="Email"
-                  :rules="[testPattern.email]"
-                  error-message="Please enter a valid email address"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="email" />
-                  </template>
-                </q-input>
+    <div class="column q-px-lg">
+      <div class="row">
+        <q-card rounded style="width: 300px; height: 395px">
+          <q-card-section class="bg-primary">
+            <h4 class="text-h5 text-white q-my-sm">Sign in</h4>
+          </q-card-section>
+          <q-card-section>
+            <q-form class="q-px-sm q-pt-sm">
+              <q-input
+                square
+                clearable
+                v-model="form.email"
+                type="email"
+                label="Email"
+                :rules="[testPattern.email]"
+                error-message="Please enter a valid email address"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="email" />
+                </template>
+              </q-input>
 
-                <q-input
-                  square
-                  clearable
-                  v-model="form.password"
-                  type="password"
-                  label="Password"
-                >
-                  <!-- 10 or more upper + lower + numeric characters -->
+              <q-input
+                square
+                clearable
+                v-model="form.password"
+                type="password"
+                label="Password"
+              >
+                <!-- 10 or more upper + lower + numeric characters -->
 
-                  <template v-slot:prepend>
-                    <q-icon name="lock" />
-                  </template>
-                </q-input>
-              </q-form>
-            </q-card-section>
-            <q-card-actions class="q-px-lg q-mt-sm q-pb-none">
+                <template v-slot:prepend>
+                  <q-icon name="lock" />
+                </template>
+              </q-input>
               <q-btn
+                class="q-mt-md full-width text-white"
                 type="submit"
                 unelevated
                 size="lg"
                 color="primary"
-                class="full-width text-white"
                 label="Login"
+                @click="handleSubmit"
               />
-            </q-card-actions>
-            <q-card-section class="row flex-center">
-              <RouterLink to="/register" class="text-grey-6">
-                Register</RouterLink
-              >
-            </q-card-section>
-          </q-card>
-        </div>
+            </q-form>
+          </q-card-section>
+
+          <q-card-section class="row flex-center">
+            <RouterLink to="/register" class="text-grey-6">
+              Register</RouterLink
+            >
+          </q-card-section>
+        </q-card>
       </div>
-    </form>
+    </div>
   </q-page>
 
   <q-dialog

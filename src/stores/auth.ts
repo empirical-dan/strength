@@ -67,9 +67,6 @@ export const useAuthStore = defineStore('auth', () => {
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
-      options: {
-        emailRedirectTo: 'https://strength-seven.vercel.app/',
-      },
     });
     if (error) {
       console.log(data);
