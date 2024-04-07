@@ -1,4 +1,4 @@
-# Strength Studio (strength)
+  # Strength Studio (strength)
 
 A training tool
 
