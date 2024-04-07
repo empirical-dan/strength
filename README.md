@@ -2,12 +2,18 @@
 
 A training tool
 
+![Screenshot_20240407-184356_Chrome](https://github.com/empirical-dan/strength/assets/52764820/a1546f41-6174-4093-83a9-3f1df576d82b)
+
+![Screenshot 2024-04-07 183917](https://github.com/empirical-dan/strength/assets/52764820/c7fa2d98-b904-401b-b4ad-85ab32507705)
+
+
 ## Install the dependencies
 ```bash
 yarn
 # or
 npm install
 ```
+
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
 ```bash
