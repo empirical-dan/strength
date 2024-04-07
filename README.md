@@ -18,7 +18,7 @@ Other Open Source strength and conditioning style apps do exist. Strength Stuδi
 
 # RPE Training
 
-Rate of perceived exertion (RPE) training has been used extensively by Strength Stuδi/o's contributors. Rather than rely on relatively simplistic linear models, such as the Epsley formula, Strength Stuδi/o utlises a unique log-linear algorithm for calculating 1 rep max based on real data analysed using R. This is consistent with recently published data: https://doi.org/10.1007/s40279-023-01937-7
+Rate of perceived exertion (RPE) training has been used extensively by Strength Stuδi/o's contributors. Rather than rely on relatively simplistic linear models, such as the Brzycki or Epley formulae, Strength Stuδi/o utlises a unique log-linear algorithm for calculating 1 rep max based on real data analysed using R. This is consistent with recently published data: https://doi.org/10.1007/s40279-023-01937-7
 
 
 # Web Technology
