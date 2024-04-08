@@ -15,6 +15,9 @@ There are many commercial fitness apps. Strength Stuδi/o benefits from not bein
 
 Strength Stuδi/o welcomes collaboration with any other developers and projects in the Open Source strength and fitness domain. Others are free to benefit from Strength Stuδi/o's code and knowledge base to enhance their projects. Strength Stuδi/o welcomes contributions and suggestions from everyone. You are the community.
 
+# User eXperience
+
+Strength Stuδi/o is designed to put the ease, accuracy and efficiency of adding real workout records at the centre of the User eXperience. It was initially designed in parallel with a native desktop GUI that went through months of testing by recording and planning real workouts that would be typical for Strength Stuδi/o's target audience. 
 
 # Data Driven
 
