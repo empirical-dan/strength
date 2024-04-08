@@ -25,6 +25,7 @@ Strength Stuδi/o is driven by the utility of easily documenting, recalling and 
 
 For example, Strength Stuδi/o has a sound scientific basis for predicting and recording workout metrics for both percentage and RPE based training simultaneously:
 Strength training is often programmed by percentage of maximum lifts e.g. "perform 5 squats at 75% of your 1 repitition max". Often, it is useful to estimate maximum lifts (estimated 1 rep max, e1RM) as it may not be practical or desirable to test every exercise to maximum on a frequent basis. Typically, linear models such as the Brzycki or Epley formulae are used to calculate e1RM. Strength Stuδi/o utlises a log-linear algorithm for calculating 1 rep max based on real data analysed using R. This is consistent with recently published data: https://doi.org/10.1007/s40279-023-01937-7.
+
 More recently, refinement of the Rate of Perceived Exertion (RPE) scale has been used extensively in strength and conditioning training. The modern definition in this context is that RPE 8 (out of 10) means that you could have performed two more repetitions. RPE is at the heart of Strength Stuδi/o's User Interface although it is not mandatory to use it. 
 
 # Web Technology
