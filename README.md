@@ -76,6 +76,7 @@ Training block planning
 Import/export
 - Facility to import/export to spreadsheets
 
+# History
 Basic desktop GUI illustration:
 
 ![Screenshot 2024-04-07 213025](https://github.com/empirical-dan/strength/assets/52764820/b2778611-76fc-4002-9baa-42f8a57584e6)
