@@ -7,6 +7,7 @@ import DbErrorDialog from 'src/components/DbErrorDialog.vue';
 const sets = useSetsStore();
 const dbError = ref(false);
 const loading = ref(false);
+const showTargets = ref(true);
 
 defineComponent({
   name: 'ExerciseFieldView',
@@ -25,10 +26,10 @@ const rpeRules = [
     (val >= 0 && val <= 10 && val % 0.5 === 0) || '0-10 (to 0.5)',
 ];
 
-const notesRules = [
-  (val: string | null) =>
-    typeof val !== 'string' || val.length <= 100 || 'Maximum 100 chars',
-];
+// const notesRules = [
+//   (val: string | null) =>
+//     typeof val !== 'string' || val.length <= 100 || 'Maximum 100 chars',
+// ];
 
 export type Props = {
   units?: Units;
@@ -156,6 +157,7 @@ watch(e1rm, () => {
 <template>
   <div class="parent bg-secondary rounded-borders q-ma-md">
     <q-input
+      v-show="showTargets"
       :disable="selectedSetId === -1"
       class="div1"
       tabindex="1"
@@ -168,12 +170,13 @@ watch(e1rm, () => {
       outlined
       dark
       color="white"
-      bg-color="primary"
+      bg-color="accent"
       label="Target Weight"
       :rules="weightRules"
       hide-bottom-space
     />
     <q-input
+      v-show="showTargets"
       :disable="selectedSetId === -1"
       class="div2"
       tabindex="2"
@@ -185,7 +188,7 @@ watch(e1rm, () => {
       outlined
       dark
       color="white"
-      bg-color="primary"
+      bg-color="accent"
       label="Target Reps"
       prefix="x "
       hide-bottom-space
@@ -193,6 +196,7 @@ watch(e1rm, () => {
     />
 
     <q-input
+      v-show="showTargets"
       :disable="selectedSetId === -1"
       class="div3"
       tabindex="3"
@@ -204,29 +208,16 @@ watch(e1rm, () => {
       outlined
       dark
       color="white"
-      bg-color="primary"
+      bg-color="accent"
       label="Target RPE"
       hide-bottom-space
       prefix="@ "
       :rules="rpeRules"
     />
-    <q-btn
-      :disable="selectedSetId === -1"
-      class="div4"
-      icon="sym_o_double_arrow"
-      color="primary"
-      push
-      glossy
-      style="min-height: 5vh"
-      @click="copyTargets"
-      :loading="loading"
-    >
-      <q-tooltip>Copy Target Values</q-tooltip>
-    </q-btn>
 
     <q-input
       :disable="selectedSetId === -1"
-      class="div5"
+      class="div4"
       tabindex="4"
       v-model.number="row.actual_weight"
       type="number"
@@ -238,14 +229,14 @@ watch(e1rm, () => {
       dark
       color="white"
       bg-color="primary"
-      label="Actual Weight"
+      label="Weight"
       hide-bottom-space
       :rules="weightRules"
     />
 
     <q-input
       :disable="selectedSetId === -1"
-      class="div6"
+      class="div5"
       tabindex="5"
       v-model.number="row.actual_reps"
       type="number"
@@ -256,7 +247,7 @@ watch(e1rm, () => {
       dark
       color="white"
       bg-color="primary"
-      label="Actual Reps"
+      label="Reps"
       prefix="x "
       hide-bottom-space
       :rules="repsRules"
@@ -264,7 +255,7 @@ watch(e1rm, () => {
 
     <q-input
       :disable="selectedSetId === -1"
-      class="div7"
+      class="div6"
       tabindex="6"
       v-model.number="row.actual_rpe"
       type="number"
@@ -275,97 +266,39 @@ watch(e1rm, () => {
       dark
       color="white"
       bg-color="primary"
-      label="Actual RPE"
+      label="RPE"
       prefix="@ "
       hide-bottom-space
       :rules="rpeRules"
     />
 
-    <q-input
-      :disable="selectedSetId === -1"
-      class="div8"
-      tabindex="7"
-      v-model="row.note"
-      type="text"
-      outlined
-      dark
-      color="white"
-      bg-color="primary"
-      hide-bottom-space
-      label="Notes"
-      :rules="notesRules"
-    />
-
-    <q-input
-      :disable="selectedSetId === -1"
-      class="div9"
-      v-model.number="e1rm"
-      type="number"
-      readonly
-      outlined
-      dark
-      color="white"
-      bg-color="primary"
-      label="e1RM"
-      hide-bottom-space
-      :suffix="units"
-    />
-
-    <q-input
-      :disable="selectedSetId === -1"
-      class="div10"
-      v-model.number="percentageMax"
-      type="number"
-      readonly
-      outlined
-      dark
-      color="white"
-      bg-color="primary"
-      label="% Max"
-      hide-bottom-space
-      suffix=" %"
-    />
-
     <q-btn
+      v-show="showTargets"
       :disable="selectedSetId === -1"
-      class="div11"
-      icon="sym_o_playlist_add"
-      color="primary"
+      class="div7"
+      icon="keyboard_arrow_down"
+      color="accent"
+      size="sm"
       push
       glossy
-      style="min-height: 5vh"
-      @click="addRow(true)"
+      dense
+      @click="copyTargets"
       :loading="loading"
+      label="copy"
     >
-      <q-tooltip>Copy Set</q-tooltip>
+      <q-tooltip>Copy Target Values</q-tooltip>
     </q-btn>
-
-    <q-btn
-      class="div12"
-      icon="sym_o_docs_add_on"
-      color="primary"
-      push
-      glossy
-      style="min-height: 5vh"
-      @click="addRow(false)"
-      :loading="loading"
-    >
-      <q-tooltip>Add Empty Set</q-tooltip>
-    </q-btn>
-
-    <q-btn
-      :disable="selectedSetId === -1"
-      class="div13"
-      icon="sym_o_playlist_remove"
-      color="primary"
-      push
-      glossy
-      style="min-height: 5vh"
-      @click="removeRow"
-      :loading="loading"
-    >
-      <q-tooltip>Remove Set</q-tooltip>
-    </q-btn>
+    <q-toggle
+      size="xs"
+      v-model="showTargets"
+      dense
+      color="accent"
+      style="font-size: 0.75em"
+      class="div8 text-accent q-mx-xs"
+      label="Targets"
+      checked-icon="check"
+      unchecked-icon="clear"
+    ></q-toggle>
   </div>
 
   <DbErrorDialog v-model="dbError"> </DbErrorDialog>
@@ -374,8 +307,8 @@ watch(e1rm, () => {
 <style>
 .parent {
   display: grid;
-  grid-template-columns: 1fr repeat(2, 0.5fr) 1fr;
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr) 0.25fr;
+  grid-template-rows: repeat(auto-fill, 1fr);
   column-gap: 0.5vw;
   row-gap: 0.5vh;
 }
@@ -384,40 +317,25 @@ watch(e1rm, () => {
   grid-area: 1 / 1 / 2 / 2;
 }
 .div2 {
-  grid-area: 2 / 1 / 3 / 2;
-}
-.div3 {
-  grid-area: 3 / 1 / 4 / 2;
-}
-.div4 {
-  grid-area: 2 / 2 / 3 / 4;
-}
-.div5 {
-  grid-area: 1 / 4 / 2 / 5;
-}
-.div6 {
-  grid-area: 2 / 4 / 3 / 5;
-}
-.div7 {
-  grid-area: 3 / 4 / 4 / 5;
-}
-.div8 {
-  grid-area: 4 / 2 / 5 / 4;
-}
-.div9 {
-  grid-area: 4 / 1 / 5 / 2;
-}
-.div10 {
-  grid-area: 4 / 4 / 5 / 5;
-}
-.div11 {
   grid-area: 1 / 2 / 2 / 3;
 }
-.div12 {
+.div3 {
   grid-area: 1 / 3 / 2 / 4;
 }
-.div13 {
-  grid-area: 3 / 2 / 4 / 4;
+.div4 {
+  grid-area: 2 / 1 / 3 / 2;
+}
+.div5 {
+  grid-area: 2 / 2 / 3 / 3;
+}
+.div6 {
+  grid-area: 2 / 3 / 3 / 4;
+}
+.div7 {
+  grid-area: 1 / 4 / 2 / 5;
+}
+.div8 {
+  grid-area: 2 / 4 / 3 / 5;
 }
 
 /* .q-input .q-field__control {
