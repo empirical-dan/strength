@@ -5,6 +5,7 @@ import {
   useValidatePassword,
 } from '../composables/validators';
 import { useAuthStore } from 'src/stores/auth';
+import { useRouter } from 'vue-router';
 
 const auth = useAuthStore();
 const displayIsRegisteredDialog = ref(false);
@@ -12,6 +13,7 @@ const displayLoggedInDialog = ref(false);
 const displayInvalidDialog = ref(false);
 const displayRegistrationFailedDialog = ref(false);
 const submitting = ref(false);
+const router = useRouter();
 
 type accountForm = {
   name: string;
@@ -41,6 +43,12 @@ async function createAccount() {
     console.log('Failed to sign up');
 
     return false;
+  }
+}
+
+async function demo() {
+  if ((await auth.signInAnonymously()) === true) {
+    router.push('/');
   }
 }
 
@@ -78,9 +86,9 @@ async function handleSubmit() {
     <q-form>
       <div class="column q-px-lg">
         <div class="row">
-          <q-card rounded style="width: 300px; height: 475px">
+          <q-card rounded style="width: 300px; height: 485px">
             <q-card-section class="bg-primary">
-              <h4 class="text-h5 text-white q-my-xs">Registration</h4>
+              <h4 class="text-h5 text-white q-my-sm">Registration</h4>
             </q-card-section>
             <q-card-section>
               <q-form class="q-px-sm q-pt-sm">
@@ -152,8 +160,16 @@ async function handleSubmit() {
               </q-form>
             </q-card-section>
 
-            <q-card-section class="row flex-center">
-              <RouterLink to="/login" class="text-grey-6"> Login</RouterLink>
+            <q-card-section class="row flex justify-around">
+              <q-card-actions>
+                <RouterLink to="/login" class="text-grey-6 q-pr-xl">
+                  Login</RouterLink
+                >
+
+                <RouterLink @click="demo" to="/" class="text-grey-6 q-pl-lg">
+                  Demo</RouterLink
+                ></q-card-actions
+              >
             </q-card-section>
           </q-card>
         </div>

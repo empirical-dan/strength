@@ -6,6 +6,23 @@ export const useAuthStore = defineStore('auth', () => {
   const userId = ref<string | null>(null);
   const isLoggedIn = ref(false);
 
+  async function signInAnonymously() {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    console.log('Anonymous login');
+    if (!data.user) return false;
+    if (!error) {
+      userId.value = data.user.id;
+      isLoggedIn.value = true;
+      console.log(data);
+      return true;
+    } else {
+      userId.value = null;
+      isLoggedIn.value = false;
+      console.error(error);
+      return false;
+    }
+  }
+
   async function signInWithPassword(email: string, password: string) {
     if (await getSession()) {
       console.log('Signed in already.');
@@ -85,5 +102,6 @@ export const useAuthStore = defineStore('auth', () => {
     getSession,
     signOut,
     signUp,
+    signInAnonymously,
   };
 });
