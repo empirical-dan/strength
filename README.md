@@ -5,9 +5,11 @@ A training tool
 Strength Stuδi/o is an Open Source Strength Training App.
 It is a mobile first Progressive Web Application written mostly in TypeScript using Vue and the Quasar Framework. 
 
-![Screenshot_20240407-184356_Chrome](https://github.com/empirical-dan/strength/assets/52764820/a1546f41-6174-4093-83a9-3f1df576d82b)
 
-![Screenshot 2024-04-07 183917](https://github.com/empirical-dan/strength/assets/52764820/c7fa2d98-b904-401b-b4ad-85ab32507705)
+![Screenshot_20240409-192447_Chrome](https://github.com/empirical-dan/strength/assets/52764820/b87bdf06-8d8c-46d2-b607-5bf83d6fca04)
+
+![Screenshot 2024-04-09 192652](https://github.com/empirical-dan/strength/assets/52764820/82dd8b3d-1013-4676-ae83-7235e5596b17)
+
 
 Strength Stuδi/o's design philosophy is to put the User eXperience first and foremost. It is a Strength Training App which is easy to use and has functionality beyond primarily commercial apps. The focus is on facilitating strength training using up to date methods such as percentage max and rate of perceived exertion (RPE). The app is aimed at trainees and trainers who would benefit from documenting their workouts in a logical and structured way i.e. almost everyone. Strength Stuδi/o prioritises usability and utility whilst it continues to evolve into a tool that is as funcitonal as the most customised spreadsheet and beyond. 
 
