@@ -307,6 +307,35 @@ export type Database = {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          show_target_fields: boolean | null;
+        };
+        Insert: {
+          first_name?: string | null;
+          id: string;
+          last_name?: string | null;
+          show_target_fields?: boolean | null;
+        };
+        Update: {
+          first_name?: string | null;
+          id?: string;
+          last_name?: string | null;
+          show_target_fields?: boolean | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_id_fkey';
+            columns: ['id'];
+            isOneToOne: true;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       range: {
         Row: {
           id: number;
@@ -545,6 +574,32 @@ export type Database = {
           username?: string | null;
         };
         Relationships: [];
+      };
+      visible_columns: {
+        Row: {
+          id: number;
+          name: string | null;
+          user_id: string;
+        };
+        Insert: {
+          id?: number;
+          name?: string | null;
+          user_id: string;
+        };
+        Update: {
+          id?: number;
+          name?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'visible_columns_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       workout: {
         Row: {

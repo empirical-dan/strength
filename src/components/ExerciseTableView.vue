@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { defineComponent, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import { ExerciseSet } from '../types/ExerciseSet';
 import { ExerciseTableColumn } from '../types/ExerciseTableColumn';
 import { Units } from 'src/types/Units';
 import { useQuasar } from 'quasar';
 import { useSetsStore } from 'src/stores/sets';
 import DbErrorDialog from './DbErrorDialog.vue';
+import { useProfileStore } from 'src/stores/profile';
+import { storeToRefs } from 'pinia';
 
-const sets = useSetsStore();
 const $q = useQuasar();
+// const visibleColumns = useProfileStore().visibleColumns;
+const sets = useSetsStore();
+// const visibleColumns = ref(['note']);
+const profile = useProfileStore();
+
 const invalid = ref(false);
 const displayDbErrorDialog = ref(false);
 const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
@@ -229,17 +235,23 @@ const columns: ExerciseTableColumn[] = [
   },
 ];
 
-const visibleColumns = ref(
-  columns
-    .filter((column) => {
-      if ($q.platform.is.mobile) {
-        return column.name !== 'note';
-      } else {
-        return column.required === false && column.name !== 'note';
-      }
-    })
-    .map((column) => column.name)
-);
+// const visibleColumns = ref(
+//   columns
+//     .filter((column) => {
+//       if ($q.platform.is.mobile) {
+//         return column.name !== 'note';
+//       } else {
+//         return column.required === false && column.name !== 'note';
+//       }
+//     })
+//     .map((column) => column.name)
+// );
+// console.log('Visibile columns calculated:');
+// console.log(visibleColumns.value);
+
+// const visibleColumns = useProfileStore().visibleColumns;
+// console.log('Visible columns from profile:');
+// console.log(visibleColumns);
 
 const errorWeight = ref(false);
 const errorMessageWeight = ref('');
@@ -335,7 +347,7 @@ function noteValidation(val?: string) {
       :title="props.title"
       :rows="sets.data"
       :columns="columns"
-      :visible-columns="visibleColumns"
+      :visible-columns="profile.visibleColumns"
       row-key="set_number"
       virtual-scroll
       v-model:pagination="pagination"
@@ -411,7 +423,7 @@ function noteValidation(val?: string) {
         </q-btn-group>
         <q-space></q-space>
         <q-select
-          v-model="visibleColumns"
+          v-model="profile.visibleColumns"
           multiple
           dense
           options-dense
@@ -425,6 +437,7 @@ function noteValidation(val?: string) {
           option-value="name"
           options-cover
           style="min-width: 95px; min-height: 40px; font-size: 0.7rem"
+          @update:model-value="profile.updateProfile"
         />
       </template>
 

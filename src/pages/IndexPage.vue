@@ -6,18 +6,20 @@ import { onBeforeMount, ref } from 'vue';
 import { supabase } from '../supabase/supabase';
 import { useSetsStore } from 'stores/sets';
 import { useAuthStore } from 'src/stores/auth';
+import { useProfileStore } from 'stores/profile';
 
 const title = 'Squat'; // must limit title to 40 characters for mobile
 const units: Units = 'kg';
 
 const sets = useSetsStore();
 const auth = useAuthStore();
+const profile = useProfileStore();
 
 const selectedSetId = ref<number>(-1);
 // const user = useUserStore();
 
 onBeforeMount(async () => {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('sets')
     .select()
     .match({ exercise_id: 212, user_id: auth.userId })
@@ -33,6 +35,8 @@ onBeforeMount(async () => {
     selectedSetId.value = 0;
   }
   console.log(sets.data);
+
+  profile.loadProfile();
 });
 
 // watch(mySets, () => {

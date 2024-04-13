@@ -1,10 +1,12 @@
 import { supabase } from 'src/supabase/supabase';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { useProfileStore } from 'src/stores/profile';
 
 export const useAuthStore = defineStore('auth', () => {
   const userId = ref<string | null>(null);
   const isLoggedIn = ref(false);
+  const profile = useProfileStore();
 
   async function signInAnonymously() {
     const { data, error } = await supabase.auth.signInAnonymously();
@@ -36,6 +38,13 @@ export const useAuthStore = defineStore('auth', () => {
       userId.value = data.user.id;
       isLoggedIn.value = true;
       console.log(data);
+      if (!(await profile.checkProfileExists(userId.value))) {
+        // if this is the first login
+        console.log('Creating new user profile:');
+        console.log(profile.data);
+        console.log(profile.visibleColumns);
+        profile.updateProfile();
+      }
       return true;
     } else {
       userId.value = null;
@@ -91,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
       return false;
     } else {
       console.log(data);
+
       return true;
     }
   }

@@ -8,5 +8,6 @@
     "https://cdn.jsdelivr.net/npm/quasar@2.15.1/dist/quasar.prod.css"
   ],
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "r.lsp.promptToInstall": false
 }

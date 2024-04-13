@@ -22,7 +22,8 @@ async function handleSubmit() {
 
   // Logged in. If user newly logged in the state of auth.isLogged in will change.
   // This will cause the popup to appear
-  // If already signed in then they should have been forwarded straight to the app '/' by the router
+  // If already signed in
+  // then they should have been forwarded straight to the app '/' by the router
 }
 </script>
 

@@ -4,10 +4,11 @@ import { Units } from 'src/types/Units';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import { useSetsStore } from 'src/stores/sets';
 import DbErrorDialog from 'src/components/DbErrorDialog.vue';
+import { useProfileStore } from 'src/stores/profile';
 const sets = useSetsStore();
 const dbError = ref(false);
 const loading = ref(false);
-const showTargets = ref(true);
+const profile = useProfileStore();
 
 defineComponent({
   name: 'ExerciseFieldView',
@@ -93,32 +94,32 @@ onMounted(() => {
   console.log(row.value);
 });
 
-async function addRow(copy?: boolean) {
-  loading.value = true;
-  if (copy === undefined) {
-    copy = false;
-  }
-  // add a new set
-  // then select the set that was just added
-  const { success, row } = await sets.addSet(selectedSetId.value, copy);
-  selectedSetId.value = row;
-  if (!success) {
-    dbError.value = true;
-  }
-  loading.value = false;
-}
+// async function addRow(copy?: boolean) {
+//   loading.value = true;
+//   if (copy === undefined) {
+//     copy = false;
+//   }
+//   // add a new set
+//   // then select the set that was just added
+//   const { success, row } = await sets.addSet(selectedSetId.value, copy);
+//   selectedSetId.value = row;
+//   if (!success) {
+//     dbError.value = true;
+//   }
+//   loading.value = false;
+// }
 
-async function removeRow() {
-  loading.value = true;
-  const { success, row } = await sets.removeSet(selectedSetId.value);
-  selectedSetId.value = row;
-  if (!success) {
-    dbError.value = true;
+// async function removeRow() {
+//   loading.value = true;
+//   const { success, row } = await sets.removeSet(selectedSetId.value);
+//   selectedSetId.value = row;
+//   if (!success) {
+//     dbError.value = true;
 
-    // selectedSetId.value = sets.removeSet(selectedSetId.value);
-  }
-  loading.value = false;
-}
+//     // selectedSetId.value = sets.removeSet(selectedSetId.value);
+//   }
+//   loading.value = false;
+// }
 
 async function copyTargets() {
   loading.value = true;
@@ -157,7 +158,7 @@ watch(e1rm, () => {
 <template>
   <div class="parent bg-secondary rounded-borders q-ma-md">
     <q-input
-      v-show="showTargets"
+      v-show="profile.data.show_target_fields"
       :disable="selectedSetId === -1"
       class="div1"
       tabindex="1"
@@ -176,7 +177,7 @@ watch(e1rm, () => {
       hide-bottom-space
     />
     <q-input
-      v-show="showTargets"
+      v-show="profile.data.show_target_fields"
       :disable="selectedSetId === -1"
       class="div2"
       tabindex="2"
@@ -196,7 +197,7 @@ watch(e1rm, () => {
     />
 
     <q-input
-      v-show="showTargets"
+      v-show="profile.data.show_target_fields"
       :disable="selectedSetId === -1"
       class="div3"
       tabindex="3"
@@ -273,7 +274,7 @@ watch(e1rm, () => {
     />
 
     <q-btn
-      v-show="showTargets"
+      v-show="profile.data.show_target_fields"
       :disable="selectedSetId === -1"
       class="div7"
       icon="keyboard_arrow_down"
@@ -290,7 +291,7 @@ watch(e1rm, () => {
     </q-btn>
     <q-toggle
       size="xs"
-      v-model="showTargets"
+      v-model="profile.data.show_target_fields"
       dense
       color="accent"
       style="font-size: 0.75em"
@@ -298,6 +299,7 @@ watch(e1rm, () => {
       label="Targets"
       checked-icon="check"
       unchecked-icon="clear"
+      @update:model-value="profile.updateProfile"
     ></q-toggle>
   </div>
 
