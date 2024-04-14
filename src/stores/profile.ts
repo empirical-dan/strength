@@ -7,13 +7,17 @@ import { VisibleColumn } from 'src/types/VisibleColumn';
 
 export const useProfileStore = defineStore('profile', () => {
   const auth = useAuthStore();
+
+  // this is the default profile for new users:
   const data = ref<Profile>({
     id: auth.userId ?? '',
     first_name: '',
     last_name: '',
     show_target_fields: true,
+    current_exercise: 212,
+    current_set: -1,
   });
-
+  // these are the default visible columns for new users
   const visibleColumns = ref<VisibleColumn[]>([
     'target_weight',
     'target_reps',
@@ -45,7 +49,7 @@ export const useProfileStore = defineStore('profile', () => {
     data.value.id = auth.userId;
     console.log('Updating profile for user:');
     console.log(data.value);
-    const { data: profileData, error: profileError } = await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .upsert(data.value)
       .select();

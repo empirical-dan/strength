@@ -2,11 +2,14 @@
 import { reactive, ref } from 'vue';
 import { testPattern } from 'src/patterns';
 import { useAuthStore } from 'src/stores/auth';
+import { useProfileStore } from 'src/stores/profile';
 // import { useRouter } from 'vue-router';
 // const router = useRouter();
 
 const auth = useAuthStore();
+const profile = useProfileStore();
 const success = ref(false);
+const showPassword = ref(false);
 
 // Create a reactive "form" object to store the values of the form fields
 const form = reactive({
@@ -18,12 +21,21 @@ const form = reactive({
 // Function to handle form submission
 async function handleSubmit() {
   // Try to sign in
-  success.value = await auth.signInWithPassword(form.email, form.password);
-
+  await auth.signInWithPassword(form.email, form.password);
+  if (auth.isLoggedIn && auth.userId !== null) {
+    success.value = true;
+  } else return;
   // Logged in. If user newly logged in the state of auth.isLogged in will change.
   // This will cause the popup to appear
+
   // If already signed in
-  // then they should have been forwarded straight to the app '/' by the router
+  // then they should have been forwarded straight to the app '/home' by the router
+
+  // check if the user has a profile here and if not create one:
+  if (!profile.checkProfileExists(auth.userId)) {
+    profile.updateProfile();
+  }
+  profile.loadProfile();
 }
 </script>
 
@@ -41,7 +53,6 @@ async function handleSubmit() {
             <q-form class="q-px-sm q-pt-sm">
               <q-input
                 square
-                clearable
                 v-model="form.email"
                 type="email"
                 label="Email"
@@ -55,15 +66,21 @@ async function handleSubmit() {
 
               <q-input
                 square
-                clearable
                 v-model="form.password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 label="Password"
               >
                 <!-- 10 or more upper + lower + numeric characters -->
 
                 <template v-slot:prepend>
                   <q-icon name="lock" />
+                </template>
+                <template v-slot:append>
+                  <q-icon
+                    :name="showPassword ? 'visibility' : 'visibility_off'"
+                    class="cursor-pointer"
+                    @click="showPassword = !showPassword"
+                  />
                 </template>
               </q-input>
               <q-btn
@@ -117,7 +134,7 @@ async function handleSubmit() {
         </q-card-section>
       </q-card>
       <q-card-actions align="right">
-        <q-btn flat label="OK" color="primary" v-close-popup to="/" />
+        <q-btn flat label="OK" color="primary" v-close-popup to="/home" />
       </q-card-actions>
     </q-card>
   </q-dialog>

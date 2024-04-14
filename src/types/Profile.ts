@@ -3,4 +3,6 @@ export type Profile = {
   first_name: string | null;
   last_name: string | null;
   show_target_fields: boolean | null;
+  current_set: number | null;
+  current_exercise: number | null;
 };

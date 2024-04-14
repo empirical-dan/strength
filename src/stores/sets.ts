@@ -4,12 +4,26 @@ import { ExerciseSet, NewExerciseSet } from 'src/types/ExerciseSet';
 import { watch, ref, computed, reactive } from 'vue';
 import { useAuthStore } from './auth';
 
-const auth = useAuthStore();
-
 export const useSetsStore = defineStore('sets', () => {
   const data = ref<ExerciseSet[]>([]);
-
+  const auth = useAuthStore();
   const rowCount = computed(() => data.value.length);
+
+  async function loadSets(exerciseId = 212) {
+    const { data: setsData, error } = await supabase
+      .from('sets')
+      .select()
+      .match({ exercise_id: exerciseId, user_id: auth.userId }) // change this line when passing in exercise
+      .order('set_number');
+    if (error) {
+      console.log(error);
+      return;
+    }
+    if (!!setsData) {
+      data.value = setsData;
+      return;
+    }
+  }
 
   function isValidWeight(val: number | string | null | undefined) {
     if (
@@ -385,6 +399,7 @@ export const useSetsStore = defineStore('sets', () => {
   return {
     data,
     rowCount,
+    loadSets,
     updateSet,
     addSet,
     removeSet,

@@ -33,7 +33,7 @@ watch(isDarkMode, () => {
     <q-header height-hint="98">
       <q-toolbar class="no-hover">
         <q-toolbar-title class="flex">
-          <q-item to="/">
+          <q-item to="home">
             <q-icon
               name="sym_o_exercise"
               color="white"
@@ -98,7 +98,7 @@ watch(isDarkMode, () => {
 
     <q-drawer v-model="leftDrawerOpen" :width="200" side="left">
       <q-list>
-        <q-item clickable v-ripple>
+        <q-item clickable v-ripple to="/home">
           <q-item-section avatar>
             <q-icon color="primary" name="home" size="md" class="q-py-sm" />
           </q-item-section>
@@ -131,7 +131,7 @@ watch(isDarkMode, () => {
           >
         </q-item>
         <!-- <q-separator /> -->
-        <q-item clickable v-ripple>
+        <q-item clickable v-ripple to="/sets">
           <q-item-section avatar>
             <q-icon
               name="table_view"
@@ -143,7 +143,7 @@ watch(isDarkMode, () => {
           <q-item-section class="text-h6 text-weight-bold">Sets</q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple>
+        <q-item clickable v-ripple to="/modifiers">
           <q-item-section avatar>
             <q-icon name="tune" size="md" color="primary" class="q-py-sm" />
           </q-item-section>

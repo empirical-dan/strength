@@ -309,18 +309,24 @@ export type Database = {
       };
       profiles: {
         Row: {
+          current_exercise: number | null;
+          current_set: number | null;
           first_name: string | null;
           id: string;
           last_name: string | null;
           show_target_fields: boolean | null;
         };
         Insert: {
+          current_exercise?: number | null;
+          current_set?: number | null;
           first_name?: string | null;
           id: string;
           last_name?: string | null;
           show_target_fields?: boolean | null;
         };
         Update: {
+          current_exercise?: number | null;
+          current_set?: number | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;

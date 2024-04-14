@@ -12,32 +12,44 @@ const title = 'Squat'; // must limit title to 40 characters for mobile
 const units: Units = 'kg';
 
 const sets = useSetsStore();
-const auth = useAuthStore();
 const profile = useProfileStore();
+const selectedSetId = ref(-1);
+// sets.loadSets();
+if (sets.data.length) {
+  if (profile.data.current_set === null) {
+    profile.data.current_set = 0;
+  }
+  // delete this line once using profile.data.current_set:
+  selectedSetId.value = profile.data.current_set;
+} else {
+  profile.data.current_set = -1;
+}
 
-const selectedSetId = ref<number>(-1);
+// const auth = useAuthStore();
+// const profile = useProfileStore();
+
 // const user = useUserStore();
 
-onBeforeMount(async () => {
-  const { data, error } = await supabase
-    .from('sets')
-    .select()
-    .match({ exercise_id: 212, user_id: auth.userId })
-    .order('set_number');
+// onBeforeMount(async () => {
+//   const { data, error } = await supabase
+//     .from('sets')
+//     .select()
+//     .match({ exercise_id: 212, user_id: auth.userId })
+//     .order('set_number');
 
-  console.log(error);
-  console.log('DB user_id = ');
-  console.log(auth.userId);
-  console.log('Data from DB:');
-  console.log(data);
-  if (data !== null && data.length > 0) {
-    sets.data = data;
-    selectedSetId.value = 0;
-  }
-  console.log(sets.data);
+//   console.log(error);
+//   console.log('DB user_id = ');
+//   console.log(auth.userId);
+//   console.log('Data from DB:');
+//   console.log(data);
+//   if (data !== null && data.length > 0) {
+//     sets.data = data;
+//     selectedSetId.value = 0;
+//   }
+//   console.log(sets.data);
 
-  profile.loadProfile();
-});
+//   profile.loadProfile();
+// });
 
 // watch(mySets, () => {
 //   console.log('SELECTED Set changed in parent. id=' + selectedSetId.value);
