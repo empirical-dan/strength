@@ -13,16 +13,19 @@ const units: Units = 'kg';
 
 const sets = useSetsStore();
 const profile = useProfileStore();
-const selectedSetId = ref(-1);
-// sets.loadSets();
 if (sets.data.length) {
-  if (profile.data.current_set === null) {
-    profile.data.current_set = 0;
+  if (
+    profile.data.current_set === null ||
+    profile.data.current_set < 0 ||
+    profile.data.current_set >= sets.rowCount
+  ) {
+    sets.selectedSet = 0;
+  } else {
+    // delete this line once using profile.data.current_set:
+    sets.selectedSet = profile.data.current_set;
   }
-  // delete this line once using profile.data.current_set:
-  selectedSetId.value = profile.data.current_set;
 } else {
-  profile.data.current_set = -1;
+  sets.selectedSet = -1;
 }
 
 // const auth = useAuthStore();
@@ -66,11 +69,7 @@ if (sets.data.length) {
 <template>
   <!-- v-if="selectedSetId >= 0" -->
 
-  <ExerciseFieldView
-    :key="selectedSetId"
-    v-model:selectedSetId="selectedSetId"
-    :units="units"
-  >
+  <ExerciseFieldView :key="sets.selectedSet" :units="units">
   </ExerciseFieldView>
 
   <!-- <ExerciseFieldView
@@ -81,11 +80,7 @@ if (sets.data.length) {
     :units="units"
   ></ExerciseFieldView> -->
 
-  <ExerciseTableView
-    v-model:selectedSetId="selectedSetId"
-    :title="title"
-    :units="units"
-  ></ExerciseTableView>
+  <ExerciseTableView :title="title" :units="units"></ExerciseTableView>
 </template>
 
 <!-- :exerciseSets="mySets" -->
