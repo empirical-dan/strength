@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { ExerciseSet } from 'src/types/ExerciseSet';
 import { Units } from 'src/types/Units';
-import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  ref,
+  watch,
+  reactive,
+} from 'vue';
 import { useSetsStore } from 'src/stores/sets';
 import DbErrorDialog from 'src/components/DbErrorDialog.vue';
 import { useProfileStore } from 'src/stores/profile';
@@ -40,7 +47,8 @@ const props = withDefaults(defineProps<Props>(), {
   units: 'kg',
 });
 
-const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
+// const sets.selectedSet = defineModel<number>('sets.selectedSet', { default: -1 });
+
 const row = ref<ExerciseSet>({
   id: -1,
   set_number: -1,
@@ -59,11 +67,11 @@ const row = ref<ExerciseSet>({
 });
 
 if (sets.data.length) {
-  row.value = sets.data[selectedSetId.value];
+  row.value = sets.data[sets.selectedSet];
 }
 
 const percentageMax = computed(() => {
-  const rowId = selectedSetId.value;
+  const rowId = sets.selectedSet;
   if (rowId === -1) return;
   if (typeof rowId === 'number') {
     const value = sets.calculatePercentageMax(rowId);
@@ -75,7 +83,7 @@ const percentageMax = computed(() => {
 });
 
 const e1rm = computed(() => {
-  const rowId = selectedSetId.value;
+  const rowId = sets.selectedSet;
   if (rowId === -1) return;
   if (typeof rowId === 'number') {
     const value = sets.calculateE1rm(rowId);
@@ -89,7 +97,7 @@ const e1rm = computed(() => {
 onMounted(() => {
   // weightRangeValidation(row.value.target_weight);
   console.log('FieldView: Rendered');
-  console.log('FieldView: key=' + selectedSetId.value);
+  console.log('FieldView: key=' + sets.selectedSet);
   console.log('Set = ');
   console.log(row.value);
 });
@@ -101,8 +109,8 @@ onMounted(() => {
 //   }
 //   // add a new set
 //   // then select the set that was just added
-//   const { success, row } = await sets.addSet(selectedSetId.value, copy);
-//   selectedSetId.value = row;
+//   const { success, row } = await sets.addSet(sets.selectedSet, copy);
+//   sets.selectedSet = row;
 //   if (!success) {
 //     dbError.value = true;
 //   }
@@ -111,34 +119,36 @@ onMounted(() => {
 
 // async function removeRow() {
 //   loading.value = true;
-//   const { success, row } = await sets.removeSet(selectedSetId.value);
-//   selectedSetId.value = row;
+//   const { success, row } = await sets.removeSet(sets.selectedSet);
+//   sets.selectedSet = row;
 //   if (!success) {
 //     dbError.value = true;
 
-//     // selectedSetId.value = sets.removeSet(selectedSetId.value);
+//     // sets.selectedSet = sets.removeSet(sets.selectedSet);
 //   }
 //   loading.value = false;
 // }
 
 async function copyTargets() {
+  if (sets.selectedSet === null) return;
   loading.value = true;
-  if (!(await sets.copyTargetValues(selectedSetId.value))) {
+  if (!(await sets.copyTargetValues(sets.selectedSet))) {
     dbError.value = true;
     console.log('Unable to save to DB');
   }
   loading.value = false;
 }
 
-watch(selectedSetId, () => {
-  console.log('Set changed in FieldView. id=' + selectedSetId.value);
-  console.log('Set in FieldView = ');
-  if (selectedSetId.value !== null && selectedSetId.value >= 0) {
-    console.log(sets.data[selectedSetId.value]);
-  } else {
-    console.log('Empty set');
-  }
-});
+// watch(sets.selectedSet, () => {
+//   if (sets.selectedSet === null) return;
+//   console.log('Set changed in FieldView. id=' + sets.selectedSet);
+//   console.log('Set in FieldView = ');
+//   if (sets.selectedSet !== null && sets.selectedSet >= 0) {
+//     console.log(sets.data[sets.selectedSet]);
+//   } else {
+//     console.log('Empty set');
+//   }
+// });
 
 watch(percentageMax, () => {
   if (typeof percentageMax.value !== 'number') {
@@ -159,7 +169,7 @@ watch(e1rm, () => {
   <div class="parent bg-secondary rounded-borders q-ma-md">
     <q-input
       v-show="profile.data.show_target_fields"
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div1"
       tabindex="1"
       v-model.number="row.target_weight"
@@ -178,7 +188,7 @@ watch(e1rm, () => {
     />
     <q-input
       v-show="profile.data.show_target_fields"
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div2"
       tabindex="2"
       v-model.number="row.target_reps"
@@ -198,7 +208,7 @@ watch(e1rm, () => {
 
     <q-input
       v-show="profile.data.show_target_fields"
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div3"
       tabindex="3"
       v-model.number="row.target_rpe"
@@ -217,7 +227,7 @@ watch(e1rm, () => {
     />
 
     <q-input
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div4"
       tabindex="4"
       v-model.number="row.actual_weight"
@@ -236,7 +246,7 @@ watch(e1rm, () => {
     />
 
     <q-input
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div5"
       tabindex="5"
       v-model.number="row.actual_reps"
@@ -255,7 +265,7 @@ watch(e1rm, () => {
     />
 
     <q-input
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div6"
       tabindex="6"
       v-model.number="row.actual_rpe"
@@ -275,7 +285,7 @@ watch(e1rm, () => {
 
     <q-btn
       v-show="profile.data.show_target_fields"
-      :disable="selectedSetId === -1"
+      :disable="sets.selectedSet === -1"
       class="div7"
       icon="keyboard_arrow_down"
       color="accent"

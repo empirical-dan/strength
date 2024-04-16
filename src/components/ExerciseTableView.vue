@@ -17,8 +17,9 @@ const profile = useProfileStore();
 
 const invalid = ref(false);
 const displayDbErrorDialog = ref(false);
-const selectedSetId = defineModel<number>('selectedSetId', { default: -1 });
+// const current_set = defineModel<number>('current_set', { default: -1 });
 const loading = ref(false);
+const currentRadio = ref(sets.selectedSet);
 
 defineComponent({
   name: 'ExerciseTableView',
@@ -33,61 +34,29 @@ const props = withDefaults(defineProps<Props>(), {
   units: 'kg',
 });
 
-onMounted(() => {
-  console.log('TableView: Rendered');
-  console.log('TableView: selectedRowId=' + selectedSetId.value);
-  console.log('Set = ');
-  if (selectedSetId.value >= 0) {
-    console.log(sets.data[selectedSetId.value]);
-  }
-});
-
-// Perform validation of data when attempting to change row by whatever means:
-watch(selectedSetId, async (newValue, oldValue) => {
-  loading.value = true;
-  // don't perform validation if there are no rows or if the row was just deleted
-  if (oldValue === -1 || newValue === -1 || sets.data[oldValue] === undefined) {
-    loading.value = false;
-    return;
-  }
-  console.log('performing row data validation:');
-  console.log('old rowId = ' + oldValue);
-  console.log(sets.data[oldValue]);
-  console.log('new rowId = ' + newValue);
-  if (!sets.isValidSet(sets.data[oldValue])) {
-    selectedSetId.value = oldValue;
-    invalid.value = true;
-    console.log('Invalid weight in set: ' + oldValue);
-    loading.value = false;
-    return;
-  }
-  // old set has passed validation
-  // try to update it in the database
-  if (!(await sets.updateSet(selectedSetId.value))) {
-    displayDbErrorDialog.value = true;
-  }
-
-  console.log('Set changed in ExerciseTableView. id=' + selectedSetId.value);
-  console.log('Set in ExerciseTableView = ');
-  console.log('Old set was id=' + oldValue);
-  loading.value = false;
-  return;
-});
-
 async function selectRow(id: number) {
-  // this function only selects rows from a popup in the table, not using the radio buttons
-  // only perform re-validation on selecting a new row or it becomes intrusive
-  if (id === selectedSetId.value) {
+  // Perform validation of data when attempting to change row by whatever means:
+  // Only perform re-validation on selecting a new row or it becomes intrusive
+  if (id === sets.selectedSet) {
+    console.log('Re-selected current set');
+    // Tried to re-select current set. No need to do anything
     return true;
   }
-  if (!sets.isValidSet(sets.data[selectedSetId.value])) {
+  loading.value = true;
+  if (!sets.isValidSet(sets.data[sets.selectedSet])) {
     invalid.value = true;
+    loading.value = false;
     return false;
   }
+  // current set is valid so update it:
+  await sets.updateSet(sets.selectedSet);
   console.log('SELECTING NEW ROW... id = ' + id);
   console.log(sets.data[id]);
-
-  selectedSetId.value = id;
+  sets.selectSet(id);
+  currentRadio.value = id;
+  profile.data.current_set = id;
+  await profile.updateProfile();
+  loading.value = false;
   return true;
 }
 
@@ -100,13 +69,26 @@ async function addRow(copy?: boolean) {
   if (copy === undefined) {
     copy = false;
   }
-
+  if (
+    sets.selectedSet !== -1 &&
+    !sets.isValidSet(sets.data[sets.selectedSet])
+  ) {
+    invalid.value = true;
+    loading.value = false;
+    return false;
+  }
+  // current set is valid so update it:
+  await sets.updateSet(sets.selectedSet);
   // add a new set.
   // then select the set that was just added.
   // take this out and put userId into the Sets store
-  const { success, row } = await sets.addSet(selectedSetId.value, copy);
-  selectedSetId.value = row;
-  if (!success) {
+  const { success, row } = await sets.addSet(sets.selectedSet, copy);
+  sets.selectSet(row);
+  currentRadio.value = row;
+  if (success) {
+    profile.data.current_set = row;
+    await profile.updateProfile();
+  } else {
     displayDbErrorDialog.value = true;
   }
   loading.value = false;
@@ -114,29 +96,64 @@ async function addRow(copy?: boolean) {
 
 async function removeRow() {
   loading.value = true;
-  const { success, row } = await sets.removeSet(selectedSetId.value);
-  selectedSetId.value = row;
-  if (!success) {
+  if (!sets.isValidSet(sets.data[sets.selectedSet])) {
+    invalid.value = true;
+    loading.value = false;
+    return false;
+  }
+  // current set is valid so update it:
+  await sets.updateSet(sets.selectedSet);
+  const { success, row } = await sets.removeSet(sets.selectedSet);
+  sets.selectSet(row);
+  currentRadio.value = row;
+  if (success) {
+    profile.data.current_set = row;
+    await profile.updateProfile();
+  } else {
     displayDbErrorDialog.value = true;
   }
   loading.value = false;
 }
 
 async function moveRowUp() {
+  if (sets.selectedSet === 0) return;
   loading.value = true;
-  const { success, row } = await sets.moveSetUp(selectedSetId.value);
-  selectedSetId.value = row;
-  if (!success) {
+  if (!sets.isValidSet(sets.data[sets.selectedSet])) {
+    invalid.value = true;
+    loading.value = false;
+    return false;
+  }
+  // current set is valid so update it:
+  await sets.updateSet(sets.selectedSet);
+  const { success, row } = await sets.moveSetUp(sets.selectedSet);
+  sets.selectSet(row);
+  currentRadio.value = row;
+  if (success) {
+    profile.data.current_set = row;
+    await profile.updateProfile();
+  } else {
     displayDbErrorDialog.value = true;
   }
   loading.value = false;
 }
 
 async function moveRowDown() {
+  if (sets.selectedSet >= sets.rowCount - 1) return;
   loading.value = true;
-  const { success, row } = await sets.moveSetDown(selectedSetId.value);
-  selectedSetId.value = row;
-  if (!success) {
+  if (!sets.isValidSet(sets.data[sets.selectedSet])) {
+    invalid.value = true;
+    loading.value = false;
+    return false;
+  }
+  // current set is valid so update it:
+  await sets.updateSet(sets.selectedSet);
+  const { success, row } = await sets.moveSetDown(sets.selectedSet);
+  sets.selectSet(row);
+  currentRadio.value = row;
+  if (success) {
+    profile.data.current_set = row;
+    await profile.updateProfile();
+  } else {
     displayDbErrorDialog.value = true;
   }
   loading.value = false;
@@ -235,24 +252,6 @@ const columns: ExerciseTableColumn[] = [
   },
 ];
 
-// const visibleColumns = ref(
-//   columns
-//     .filter((column) => {
-//       if ($q.platform.is.mobile) {
-//         return column.name !== 'note';
-//       } else {
-//         return column.required === false && column.name !== 'note';
-//       }
-//     })
-//     .map((column) => column.name)
-// );
-// console.log('Visibile columns calculated:');
-// console.log(visibleColumns.value);
-
-// const visibleColumns = useProfileStore().visibleColumns;
-// console.log('Visible columns from profile:');
-// console.log(visibleColumns);
-
 const errorWeight = ref(false);
 const errorMessageWeight = ref('');
 function weightRangeValidation(val: number | string | null | undefined) {
@@ -322,7 +321,7 @@ function noteValidation(val?: string) {
             text-color="white"
             class="q-mr-md"
           />
-          Set {{ selectedSetId + 1 }}
+          Set {{ sets.selectedSet ?? +1 }}
         </div>
       </q-card-section>
       <q-card>
@@ -358,7 +357,7 @@ function noteValidation(val?: string) {
       <template #top>
         <q-btn-group outline push>
           <q-btn
-            :disable="selectedSetId === -1"
+            :disable="sets.selectedSet === -1"
             dense
             glossy
             push
@@ -382,7 +381,7 @@ function noteValidation(val?: string) {
             <q-tooltip v-if="!$q.platform.is.mobile">Add Empty Set</q-tooltip>
           </q-btn>
           <q-btn
-            :disable="selectedSetId === -1"
+            :disable="sets.selectedSet === -1"
             dense
             glossy
             push
@@ -395,7 +394,7 @@ function noteValidation(val?: string) {
             <q-tooltip v-if="!$q.platform.is.mobile">Remove Set</q-tooltip>
           </q-btn>
           <q-btn
-            :disable="selectedSetId === -1"
+            :disable="sets.selectedSet === -1"
             dense
             glossy
             push
@@ -408,7 +407,7 @@ function noteValidation(val?: string) {
             <q-tooltip v-if="!$q.platform.is.mobile">Move Up</q-tooltip>
           </q-btn>
           <q-btn
-            :disable="selectedSetId === -1"
+            :disable="sets.selectedSet === -1"
             dense
             glossy
             push
@@ -444,9 +443,10 @@ function noteValidation(val?: string) {
       <template #body="props">
         <q-tr :props="props">
           <q-radio
+            v-model="currentRadio"
             :key="props.rowIndex"
-            v-model="selectedSetId"
             :val="props.rowIndex"
+            @update:model-value="(val) => selectRow(val)"
           />
           <q-td key="set_number" :props="props">
             {{ '#' + props.row.set_number }}

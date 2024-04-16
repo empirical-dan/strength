@@ -6,8 +6,20 @@ import { useAuthStore } from './auth';
 
 export const useSetsStore = defineStore('sets', () => {
   const data = ref<ExerciseSet[]>([]);
+
+  const selectedSet = ref(-1);
+
   const auth = useAuthStore();
+
   const rowCount = computed(() => data.value.length);
+
+  function selectSet(id: number) {
+    // id: -1 means that there are no sets (0 is the first set as zero indexed array)
+    if (id >= -1 && id < rowCount.value) {
+      selectedSet.value = id;
+      return true;
+    } else return false;
+  }
 
   async function loadSets(exerciseId = 212) {
     const { data: setsData, error } = await supabase
@@ -19,7 +31,7 @@ export const useSetsStore = defineStore('sets', () => {
       console.log(error);
       return;
     }
-    if (!!setsData) {
+    if (setsData.length) {
       data.value = setsData;
       return;
     }
@@ -399,6 +411,8 @@ export const useSetsStore = defineStore('sets', () => {
   return {
     data,
     rowCount,
+    selectedSet,
+    selectSet,
     loadSets,
     updateSet,
     addSet,
